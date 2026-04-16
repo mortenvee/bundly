@@ -1,0 +1,73 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  command = "npm install"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Stripe webhook trenger rå body (ikke parset)
+[functions."stripe-webhook"]
+  included_files = []
+
+# Cache static assets aggressively
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML files – no cache (always fresh)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/admin/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    # Basic security headers
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+
+# Clean URLs: /admin → /admin/index.html osv.
+[[redirects]]
+  from = "/admin"
+  to   = "/admin/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app"
+  to   = "/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/"
+  to   = "/app/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/oppussing"
+  to   = "/app/oppussing/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/bryllup"
+  to   = "/app/bryllup/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/ferie"
+  to   = "/app/ferie/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/flytting"
+  to   = "/app/flytting/index.html"
+  status = 200
+
+# Fallback: ukjente URL-er → forsiden
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 404

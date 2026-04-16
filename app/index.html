@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bundly – Mine planleggere</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #06080f;
+      --surface: #0d1117;
+      --border: #1e2a3a;
+      --accent: #6366f1;
+      --text: #e8eaf0;
+      --text-muted: #8892a4;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ── Lock screen ── */
+    #lockScreen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #06080f;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px; padding: 40px 44px;
+      width: 100%; max-width: 380px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      backdrop-filter: blur(12px);
+    }
+    .auth-tabs {
+      display: flex; background: rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 3px; width: 100%; gap: 3px;
+    }
+    .auth-tab {
+      flex: 1; padding: 8px; border: none; border-radius: 7px;
+      font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all .15s;
+    }
+    .auth-tab.active { background: var(--accent); color: #fff; }
+    .auth-tab:not(.active) { background: transparent; color: #64748b; }
+    .auth-input {
+      width: 100%; background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+      padding: 12px 16px; color: #f1f5f9; font-size: 1rem;
+      font-family: inherit; outline: none; transition: border-color .2s;
+    }
+    .auth-input:focus { border-color: var(--accent); }
+    .pw-wrap { width: 100%; position: relative; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-size: 1rem; color: #64748b;
+    }
+    .auth-btn {
+      width: 100%; padding: 13px; background: var(--accent);
+      border: none; border-radius: 10px; color: white;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: opacity .15s;
+    }
+    .auth-btn:hover { opacity: .88; }
+    .auth-error { font-size: 0.8rem; color: #f87171; opacity: 0; transition: opacity .2s; text-align: center; width: 100%; min-height: 16px; }
+
+    /* ── App ── */
+    #appScreen { display: none; }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(6,8,15,.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { font-size: 18px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .logo span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .user-email { font-size: 13px; color: var(--text-muted); }
+    .plan-badge {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; padding: 3px 10px; border-radius: 20px;
+    }
+    .plan-starter { background: rgba(99,102,241,.12); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+    .plan-familie { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
+    .plan-team    { background: rgba(245,158,11,.1); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
+    .plan-gratis  { background: rgba(255,255,255,.06); color: #64748b; border: 1px solid rgba(255,255,255,.1); }
+    .sign-out-btn {
+      background: none; border: 1px solid var(--border); color: var(--text-muted);
+      border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+      font-family: inherit; transition: all .15s;
+    }
+    .sign-out-btn:hover { border-color: #f87171; color: #f87171; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 60px 32px; }
+
+    .page-title { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .page-sub { color: var(--text-muted); font-size: 15px; margin-bottom: 48px; }
+
+    .planners-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .planner-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px;
+      display: flex; flex-direction: column; gap: 16px;
+      text-decoration: none; color: inherit;
+      transition: border-color .2s, transform .2s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .planner-card:not(.locked):not(.coming-soon):hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(99,102,241,.18);
+    }
+    .planner-card:active { transform: scale(.97); }
+    .planner-card.locked {
+      opacity: .45; cursor: default;
+      filter: grayscale(.4);
+    }
+    .planner-card.coming-soon { opacity: .35; cursor: default; pointer-events: none; }
+
+    /* Velg-modus for Starter */
+    .choose-banner {
+      background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.1));
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .choose-banner-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .choose-banner h3 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+    .choose-banner p  { font-size: 13px; color: var(--text-muted); }
+    .planner-card.choosable { cursor: pointer; border-color: rgba(99,102,241,.3); }
+    .planner-card.choosable:hover {
+      border-color: var(--accent); transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(99,102,241,.2);
+    }
+    .chosen-badge {
+      position: absolute; top: 14px; right: 14px;
+      background: #22c55e; color: #fff; font-size: 10px; font-weight: 800;
+      padding: 3px 10px; border-radius: 20px; letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .planner-emoji { font-size: 2.4rem; }
+    .planner-name { font-size: 18px; font-weight: 700; }
+    .planner-desc { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; }
+    .planner-tag {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; padding: 3px 10px; border-radius: 20px;
+      width: fit-content;
+      background: rgba(99,102,241,.1); color: #818cf8;
+      border: 1px solid rgba(99,102,241,.2);
+    }
+    .planner-tag.coming { background: rgba(255,255,255,.05); color: #475569; border-color: rgba(255,255,255,.08); }
+
+    .lock-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; background: rgba(6,8,15,.7); backdrop-filter: blur(2px);
+      border-radius: 20px;
+    }
+    .lock-overlay .lock-icon { font-size: 28px; }
+    .lock-overlay p { font-size: 13px; color: var(--text-muted); text-align: center; padding: 0 20px; }
+    .upgrade-btn {
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+    }
+
+    /* ── Upgrade-banner (gratis-brukere) ── */
+    .upgrade-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(139,92,246,.08));
+      border: 1px solid rgba(99,102,241,.3);
+      border-radius: 20px; padding: 32px 36px; margin-bottom: 40px;
+      text-align: center;
+    }
+    .upgrade-banner h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .upgrade-banner p  { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+    .upgrade-plans {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    }
+    .upgrade-plan-card {
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px; padding: 24px 28px; min-width: 190px; text-align: left;
+      cursor: pointer; transition: all .2s; flex: 1; max-width: 240px;
+    }
+    .upgrade-plan-card:hover { border-color: var(--accent); background: rgba(99,102,241,.1); transform: translateY(-2px); }
+    .upgrade-plan-card.featured { border-color: var(--accent); background: rgba(99,102,241,.1); }
+    .upgrade-plan-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+    .upgrade-plan-price { font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
+    .upgrade-plan-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+    .upgrade-plan-feat { font-size: 12.5px; color: var(--text-muted); line-height: 1.7; }
+    .upgrade-plan-btn {
+      display: block; width: 100%; margin-top: 16px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: opacity .15s;
+      text-align: center;
+    }
+    .upgrade-plan-btn:hover { opacity: .88; }
+
+    /* Plan selection screen */
+    #planSelectScreen {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: var(--bg); overflow-y: auto;
+    }
+    .plan-select-inner {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 60px 24px;
+    }
+
+    @media (max-width: 600px) {
+      .upgrade-banner { padding: 24px 20px; }
+      .upgrade-plans { flex-direction: column; }
+      .upgrade-plan-card { max-width: 100%; }
+    }
+
+    @media (max-width: 900px) { .planners-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; } }
+    @media (max-width: 600px) {
+      .planners-grid { grid-template-columns: 1fr; gap: 12px; }
+      main { padding: 32px 16px; }
+      .planner-card { padding: 20px; flex-direction: row; align-items: center; gap: 14px; border-radius: 16px; }
+      .planner-emoji { font-size: 2rem; flex-shrink: 0; }
+      .planner-name { font-size: 16px; }
+      .planner-desc { font-size: 12.5px; }
+      .planner-tag { align-self: flex-start; }
+      .lock-overlay { border-radius: 16px; flex-direction: row; gap: 8px; padding: 0 16px; }
+      .lock-overlay p { display: none; }
+    }
+
+    /* ── Payment loading screen ── */
+    #paymentScreen {
+      display: none; position: fixed; inset: 0; z-index: 9000;
+      background: #06080f; align-items: center; justify-content: center;
+      flex-direction: column; gap: 24px; text-align: center;
+    }
+    .pay-spinner {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 3px solid rgba(99,102,241,.2);
+      border-top-color: #6366f1;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .pay-title { font-size: 20px; font-weight: 800; color: #f1f5f9; }
+    .pay-sub   { font-size: 14px; color: #64748b; max-width: 280px; line-height: 1.6; }
+    .pay-dots span {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: #6366f1; margin: 0 3px; animation: blink 1.2s infinite;
+    }
+    .pay-dots span:nth-child(2) { animation-delay: .2s; }
+    .pay-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink { 0%,80%,100% { opacity:.2; } 40% { opacity:1; } }
+  </style>
+</head>
+<body>
+
+<!-- ══ PAYMENT PROCESSING SCREEN ══ -->
+<div id="paymentScreen">
+  <div class="pay-spinner"></div>
+  <div class="pay-title">Bekrefter betalingen</div>
+  <div class="pay-sub">Vi kobler abonnementet ditt til kontoen. Dette tar noen sekunder.</div>
+  <div class="pay-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lockScreen">
+  <div class="auth-card">
+    <div style="font-size:2rem;">✦</div>
+    <div style="text-align:center;">
+      <div style="font-size:1.3rem;font-weight:800;color:#f1f5f9;margin-bottom:4px;">Bundly</div>
+      <div style="font-size:0.82rem;color:#64748b;" id="authSubtitle">Logg inn for å fortsette</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Logg inn</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Registrer</button>
+    </div>
+
+    <input class="auth-input" type="email" id="authEmail" placeholder="E-postadresse" autocomplete="email"
+      oninput="clearErr()" onkeydown="if(event.key==='Enter')doAuth()">
+
+    <div class="pw-wrap">
+      <input class="auth-input" type="password" id="authPassword" placeholder="Passord" autocomplete="current-password"
+        oninput="clearErr()" onkeydown="if(event.key==='Enter')doAuth()">
+      <button class="pw-toggle" onclick="togglePw()" id="pwEye">👁</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+
+    <button class="auth-btn" id="authBtn" onclick="doAuth()">Logg inn</button>
+  </div>
+</div>
+
+<!-- ══ PLAN SELECTION ══ -->
+<div id="planSelectScreen">
+  <div class="plan-select-inner">
+    <div style="text-align:center;margin-bottom:40px;">
+      <div style="font-size:1.8rem;font-weight:800;margin-bottom:8px;">Velg din plan</div>
+      <p style="color:#64748b;">Kom i gang med 7 dagers gratis prøveperiode. Ingen binding.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:860px;width:100%;">
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Starter</div>
+        <div style="font-size:2rem;font-weight:800;color:#f1f5f9;">29 <span style="font-size:.9rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
+        <ul style="list-style:none;color:#94a3b8;font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
+          <li>✓ 1 planlegger etter valg</li><li>✓ Opptil 2 brukere</li><li>✓ 2 GB lagring</li>
+        </ul>
+        <button onclick="choosePlan('starter','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+      </div>
+      <div style="background:rgba(99,102,241,0.08);border:2px solid #6366f1;border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;position:relative;">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6366f1;color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;">⭐ Mest populær</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Familie</div>
+        <div style="font-size:2rem;font-weight:800;color:#f1f5f9;">99 <span style="font-size:.9rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
+        <ul style="list-style:none;color:#94a3b8;font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
+          <li>✓ Alle planleggere</li><li>✓ Opptil 5 brukere</li><li>✓ 10 GB lagring</li><li>✓ PDF og Excel</li>
+        </ul>
+        <button onclick="choosePlan('familie','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Team</div>
+        <div style="font-size:2rem;font-weight:800;color:#f1f5f9;">299 <span style="font-size:.9rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
+        <ul style="list-style:none;color:#94a3b8;font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
+          <li>✓ Alt i Familie</li><li>✓ Opptil 20 brukere</li><li>✓ 50 GB lagring</li><li>✓ Admin-panel</li>
+        </ul>
+        <button onclick="choosePlan('team','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+      </div>
+    </div>
+    <button onclick="doSignOut()" style="margin-top:32px;background:none;border:none;color:#475569;font-size:.85rem;cursor:pointer;font-family:inherit;">← Logg ut</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="appScreen">
+  <header>
+    <a href="/app/" class="logo">✦ <span>Bundly</span></a>
+    <div class="header-right">
+      <span class="user-email" id="userEmailEl"></span>
+      <span class="plan-badge" id="planBadgeEl"></span>
+      <button class="sign-out-btn" onclick="doSignOut()">Logg ut</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="page-title">Mine planleggere</div>
+    <p class="page-sub" id="pageSubEl">Velg en planlegger for å komme i gang.</p>
+
+    <!-- Upgrade-banner: vises kun for gratis-brukere -->
+    <div class="upgrade-banner" id="upgradeBanner">
+      <h2>🔓 Lås opp planleggerne</h2>
+      <p>Velg et abonnement og kom i gang i dag. 7 dager gratis, ingen binding.</p>
+      <div class="upgrade-plans">
+        <div class="upgrade-plan-card">
+          <div class="upgrade-plan-name">Starter</div>
+          <div class="upgrade-plan-price">29 <span style="font-size:14px;font-weight:400;color:var(--text-muted);">kr/mnd</span></div>
+          <div class="upgrade-plan-sub">Velg 1 planlegger</div>
+          <div class="upgrade-plan-feat">✓ 1 planlegger etter valg<br>✓ Opptil 2 brukere<br>✓ 2 GB lagring</div>
+          <button class="upgrade-plan-btn" onclick="choosePlan('starter','monthly')">Prøv gratis i 7 dager</button>
+        </div>
+        <div class="upgrade-plan-card featured">
+          <div style="font-size:10px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">⭐ Mest populær</div>
+          <div class="upgrade-plan-name">Familie</div>
+          <div class="upgrade-plan-price">99 <span style="font-size:14px;font-weight:400;color:var(--text-muted);">kr/mnd</span></div>
+          <div class="upgrade-plan-sub">Alle planleggere</div>
+          <div class="upgrade-plan-feat">✓ Alle planleggere<br>✓ Opptil 5 brukere<br>✓ 10 GB lagring<br>✓ PDF og Excel</div>
+          <button class="upgrade-plan-btn" onclick="choosePlan('familie','monthly')">Prøv gratis i 7 dager</button>
+        </div>
+        <div class="upgrade-plan-card">
+          <div class="upgrade-plan-name">Team</div>
+          <div class="upgrade-plan-price">299 <span style="font-size:14px;font-weight:400;color:var(--text-muted);">kr/mnd</span></div>
+          <div class="upgrade-plan-sub">For bedrifter</div>
+          <div class="upgrade-plan-feat">✓ Alt i Familie<br>✓ Opptil 20 brukere<br>✓ 50 GB lagring<br>✓ Admin-panel</div>
+          <button class="upgrade-plan-btn" onclick="choosePlan('team','monthly')">Prøv gratis i 7 dager</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="planners-grid" id="plannersGrid"></div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vvxufkrfeaamycpkzmdr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2eHVma3JmZWFhbXljcGt6bWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MDM3NjYsImV4cCI6MjA5MTQ3OTc2Nn0.fqyh1ml4Pi4el6RcEgPmovgIUXVcesXPk3TGL6XyUUI';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let currentPlan = 'gratis';
+let authMode    = 'login';
+
+// ── Planleggere
+const PLANNERS = [
+  { id: 'oppussing', emoji: '🏠', name: 'Oppussing',  desc: 'Planlegg renovering med Kanban, budsjett, Gantt og forum.', url: '/app/oppussing/', plans: ['starter','familie','team'] },
+  { id: 'bryllup',   emoji: '💍', name: 'Bryllup',    desc: 'Alt du trenger for å planlegge den perfekte bryllupsdagen.', url: '/app/bryllup/',   plans: ['familie','team'], comingSoon: true },
+  { id: 'ferie',     emoji: '✈️', name: 'Ferie',      desc: 'Reiseplanlegger for hele familien — pakkelister og mer.', url: '/app/ferie/',     plans: ['familie','team'], comingSoon: true },
+  { id: 'flytting',  emoji: '📦', name: 'Flytting',   desc: 'Hold styr på alt som skjer under et boligbytte.', url: '/app/flytting/',  plans: ['familie','team'], comingSoon: true },
+  { id: 'baby',      emoji: '🍼', name: 'Baby',       desc: 'Forbered dere til den store dagen med sjekklister og tips.', url: '/app/baby/',      plans: ['familie','team'], comingSoon: true },
+  { id: 'hytte',     emoji: '🏔️', name: 'Hytte',      desc: 'Planlegg hytteturer, vedlikehold og sesongoppgaver.', url: '/app/hytte/',     plans: ['familie','team'], comingSoon: true },
+];
+
+// ── Auth UI
+function switchTab(mode) {
+  authMode = mode;
+  const isLogin = mode === 'login';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+  document.getElementById('authBtn').textContent      = isLogin ? 'Logg inn' : 'Opprett konto';
+  document.getElementById('authSubtitle').textContent = isLogin ? 'Logg inn for å fortsette' : 'Opprett din konto';
+  clearErr();
+}
+
+function clearErr() { document.getElementById('authError').style.opacity = '0'; }
+function showErr(msg) { const e = document.getElementById('authError'); e.textContent = msg; e.style.opacity = '1'; }
+
+function togglePw() {
+  const i = document.getElementById('authPassword');
+  const e = document.getElementById('pwEye');
+  i.type = i.type === 'password' ? 'text' : 'password';
+  e.textContent = i.type === 'password' ? '👁' : '🙈';
+}
+
+async function doAuth() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const btn      = document.getElementById('authBtn');
+  if (!email || !password) { showErr('Fyll inn e-post og passord.'); return; }
+
+  btn.textContent = 'Venter…'; btn.disabled = true;
+
+  try {
+    let result;
+    if (authMode === 'login') {
+      result = await db.auth.signInWithPassword({ email, password });
+    } else {
+      result = await db.auth.signUp({ email, password });
+    }
+    if (result.error) throw result.error;
+    if (authMode === 'signup' && !result.data?.session) {
+      showErr('✅ Sjekk e-posten din for bekreftelseslenke!');
+      btn.textContent = 'Opprett konto'; btn.disabled = false;
+      return;
+    }
+    btn.textContent = 'Logger inn…';
+    setTimeout(() => { btn.textContent = authMode === 'login' ? 'Logg inn' : 'Opprett konto'; btn.disabled = false; }, 8000);
+  } catch(err) {
+    const msg = err.message?.includes('Invalid login') ? 'Feil e-post eller passord.'
+              : err.message?.includes('already registered') ? 'E-posten er allerede registrert.'
+              : err.message || 'Noe gikk galt, prøv igjen.';
+    showErr(msg);
+    btn.textContent = authMode === 'login' ? 'Logg inn' : 'Opprett konto';
+    btn.disabled = false;
+  }
+}
+
+async function doSignOut() {
+  await db.auth.signOut();
+  window.location.href = '/';
+}
+
+// ── Subscription
+async function getSubscription(userId) {
+  try {
+    const { data, error } = await db.from('subscriptions').select('plan,status,period').eq('user_id', userId).single();
+    if (error?.code === 'PGRST116' || !data) return null;
+    if (error) return null;
+    return data;
+  } catch(e) { return null; }
+}
+
+// ── Valgt planlegger (Starter-plan lagres i localStorage)
+function getChosenPlanner(userId) {
+  return localStorage.getItem(`bundly_chosen_${userId}`) || null;
+}
+function setChosenPlanner(userId, plannerId) {
+  localStorage.setItem(`bundly_chosen_${userId}`, plannerId);
+}
+
+// ── Planners grid
+function renderPlanners(plan, chosenId) {
+  const hasAll    = ['familie','team'].includes(plan);
+  const isStarter = plan === 'starter';
+  const chooseMode = isStarter && !chosenId; // Starter uten valgt planlegger
+  const grid = document.getElementById('plannersGrid');
+
+  // Banner øverst i velg-modus
+  const banner = chooseMode ? `
+    <div class="choose-banner" style="grid-column:1/-1;">
+      <div class="choose-banner-icon">👆</div>
+      <div>
+        <h3>Velg din planlegger</h3>
+        <p>Med Starter-plan velger du én planlegger. Oppgrader til Familie for tilgang til alle.</p>
+      </div>
+    </div>` : '';
+
+  const cards = PLANNERS.map(p => {
+    const comingSoon = p.comingSoon;
+
+    // Familie/Team: alle åpne (eller kommer snart)
+    if (hasAll) {
+      if (comingSoon) return `
+        <div class="planner-card coming-soon">
+          <div class="planner-emoji">${p.emoji}</div>
+          <div class="planner-name">${p.name}</div>
+          <div class="planner-desc">${p.desc}</div>
+          <span class="planner-tag coming">Kommer snart</span>
+        </div>`;
+      return `
+        <a href="${p.url}" class="planner-card">
+          <div class="planner-emoji">${p.emoji}</div>
+          <div class="planner-name">${p.name}</div>
+          <div class="planner-desc">${p.desc}</div>
+          <span class="planner-tag">Åpne →</span>
+        </a>`;
+    }
+
+    // Starter — velg-modus: vis alle, klikkbare (unntatt coming soon)
+    if (isStarter && chooseMode) {
+      if (comingSoon) return `
+        <div class="planner-card coming-soon">
+          <div class="planner-emoji">${p.emoji}</div>
+          <div class="planner-name">${p.name}</div>
+          <div class="planner-desc">${p.desc}</div>
+          <span class="planner-tag coming">Kommer snart</span>
+        </div>`;
+      return `
+        <div class="planner-card choosable" onclick="pickPlanner('${p.id}','${p.url}')">
+          <div class="planner-emoji">${p.emoji}</div>
+          <div class="planner-name">${p.name}</div>
+          <div class="planner-desc">${p.desc}</div>
+          <span class="planner-tag">Velg denne →</span>
+        </div>`;
+    }
+
+    // Starter — planner valgt: vis valgt som åpen, resten låst
+    if (isStarter && chosenId) {
+      if (p.id === chosenId) return `
+        <a href="${p.url}" class="planner-card">
+          <div class="planner-emoji">${p.emoji}</div>
+          <div class="planner-name">${p.name}</div>
+          <div class="planner-desc">${p.desc}</div>
+          <span class="chosen-badge">Din plan</span>
+          <span class="planner-tag">Åpne →</span>
+        </a>`;
+      return `
+        <div class="planner-card locked">
+          <div class="planner-emoji">${p.emoji}</div>
+          <div class="planner-name">${p.name}</div>
+          <div class="planner-desc">${p.desc}</div>
+          <div class="lock-overlay">
+            <div class="lock-icon">🔒</div>
+            <p>Oppgrader til Familie for tilgang til alle</p>
+            <a href="/app/?upgrade=1" class="upgrade-btn" style="text-decoration:none;">Oppgrader</a>
+          </div>
+        </div>`;
+    }
+
+    // Gratis eller ukjent: vis låst
+    return `
+      <div class="planner-card locked">
+        <div class="planner-emoji">${p.emoji}</div>
+        <div class="planner-name">${p.name}</div>
+        <div class="planner-desc">${p.desc}</div>
+        <div class="lock-overlay">
+          <div class="lock-icon">🔒</div>
+          <p>Velg en plan for å få tilgang</p>
+        </div>
+      </div>`;
+  }).join('');
+
+  grid.innerHTML = banner + cards;
+}
+
+function pickPlanner(plannerId, plannerUrl) {
+  setChosenPlanner(currentUser.id, plannerId);
+  window.location.href = plannerUrl;
+}
+window.pickPlanner = pickPlanner;
+
+function showApp(user, sub) {
+  currentUser = user;
+  currentPlan = sub?.plan || 'gratis';
+
+  document.getElementById('lockScreen').style.display        = 'none';
+  document.getElementById('planSelectScreen').style.display  = 'none';
+  document.getElementById('appScreen').style.display         = 'block';
+
+  document.getElementById('userEmailEl').textContent = user.email;
+  const badge = document.getElementById('planBadgeEl');
+  badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+  badge.className   = `plan-badge plan-${currentPlan}`;
+
+  const chosenId = currentPlan === 'starter' ? getChosenPlanner(user.id) : null;
+  const banner   = document.getElementById('upgradeBanner');
+
+  if (currentPlan === 'gratis') {
+    document.getElementById('pageSubEl').textContent = 'Velg et abonnement nedenfor for å låse opp planleggerne.';
+    banner.style.display = 'block';
+  } else if (currentPlan === 'starter' && !chosenId) {
+    document.getElementById('pageSubEl').textContent = 'Starter-plan: velg hvilken planlegger du vil bruke.';
+    banner.style.display = 'none';
+  } else if (currentPlan === 'starter' && chosenId) {
+    const chosen = PLANNERS.find(p => p.id === chosenId);
+    document.getElementById('pageSubEl').textContent = `Starter-plan: du har valgt ${chosen?.name || chosenId}. Oppgrader for å låse opp alle.`;
+    banner.style.display = 'none';
+  } else if (['familie','team'].includes(currentPlan)) {
+    document.getElementById('pageSubEl').textContent = 'Du har tilgang til alle planleggere.';
+    banner.style.display = 'none';
+  } else {
+    document.getElementById('pageSubEl').textContent = 'Velg et abonnement for å låse opp planleggerne.';
+    banner.style.display = 'block';
+  }
+
+  renderPlanners(currentPlan, chosenId);
+}
+
+// ── Checkout
+async function choosePlan(plan, period) {
+  const btns = document.querySelectorAll('#planSelectScreen button');
+  btns.forEach(b => { b.disabled = true; });
+  try {
+    const res = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, period, userId: currentUser?.id, email: currentUser?.email }),
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else { alert('Noe gikk galt, prøv igjen.'); btns.forEach(b => b.disabled = false); }
+  } catch(err) {
+    alert('Feil: ' + err.message);
+    btns.forEach(b => b.disabled = false);
+  }
+}
+window.choosePlan = choosePlan;
+
+// ── Pending payment (sessionStorage-bro mellom app/index og planleggerne)
+function savePendingPayment(userId, plan) {
+  sessionStorage.setItem(`bundly_paid_${userId}`, JSON.stringify({ plan, ts: Date.now() }));
+}
+function getPendingPayment(userId) {
+  try {
+    const raw = sessionStorage.getItem(`bundly_paid_${userId}`);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    // Gyldig i 2 timer
+    if (Date.now() - p.ts > 2 * 60 * 60 * 1000) { sessionStorage.removeItem(`bundly_paid_${userId}`); return null; }
+    return p;
+  } catch { return null; }
+}
+
+// ── Auth state
+let paymentProcessing = false;
+
+async function handleAuthUser(user) {
+  if (!user || paymentProcessing) return;
+
+  // Kom tilbake fra Stripe checkout?
+  if (window.location.search.includes('checkout=success')) {
+    paymentProcessing = true;
+    const planFromUrl = new URLSearchParams(window.location.search).get('plan');
+
+    history.replaceState({}, '', '/app/');
+
+    document.getElementById('lockScreen').style.display    = 'none';
+    document.getElementById('paymentScreen').style.display = 'flex';
+
+    let attempts = 0;
+    const poll = async () => {
+      const sub = await getSubscription(user.id);
+      const confirmed = sub && sub.status === 'active' && sub.plan !== 'gratis';
+
+      if (confirmed) {
+        document.getElementById('paymentScreen').style.display = 'none';
+        paymentProcessing = false;
+        savePendingPayment(user.id, sub.plan);
+        showApp(user, sub);
+      } else if (attempts++ < 10) {
+        setTimeout(poll, 1500);
+      } else {
+        // Webhook treg/feilet — bruk plan fra URL, lagre i sessionStorage
+        document.getElementById('paymentScreen').style.display = 'none';
+        paymentProcessing = false;
+        const fallbackPlan = planFromUrl || 'starter';
+        savePendingPayment(user.id, fallbackPlan);
+        showApp(user, { plan: fallbackPlan, status: 'active' });
+      }
+    };
+    poll();
+    return;
+  }
+
+  const sub     = await getSubscription(user.id);
+  const hasPlan = sub && sub.status === 'active' && sub.plan !== 'gratis';
+
+  if (hasPlan) {
+    savePendingPayment(user.id, sub.plan); // hold sessionStorage oppdatert
+    showApp(user, sub);
+  } else {
+    // Sjekk om brukeren nettopp betalte (webhook ikke kommet ennå)
+    const pending = getPendingPayment(user.id);
+    if (pending) {
+      showApp(user, { plan: pending.plan, status: 'active' });
+      return;
+    }
+    currentUser = user;
+    document.getElementById('lockScreen').style.display        = 'none';
+    document.getElementById('planSelectScreen').style.display  = 'block';
+    document.getElementById('appScreen').style.display         = 'none';
+  }
+}
+
+// Sjekk eksisterende sesjon med én gang (unngår dobbel innlogging)
+db.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) {
+    handleAuthUser(session.user);
+  }
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      handleAuthUser(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      document.getElementById('lockScreen').style.display        = 'flex';
+      document.getElementById('planSelectScreen').style.display  = 'none';
+      document.getElementById('appScreen').style.display         = 'none';
+    }
+  });
+});
+</script>
+</body>
+</html>

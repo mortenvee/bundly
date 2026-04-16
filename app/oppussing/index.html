@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oppussingsplaner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- jsPDF + AutoTable for PDF-eksport -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- PDF.js for budsjett-import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<!-- ══ PASSORD-SKJERM ══ -->
+<div id="lockScreen" style="position:fixed;inset:0;z-index:9999;background:#1a1a2e;background-image:radial-gradient(ellipse at top,#16213e 0%,#1a1a2e 60%);display:flex;align-items:center;justify-content:center;">
+  <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:40px 44px;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:16px;backdrop-filter:blur(12px);">
+    <div style="font-size:2.4rem">🏠</div>
+    <div style="text-align:center;">
+      <div style="font-size:1.25rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">Oppussingsplaner</div>
+      <div style="font-size:0.82rem;color:#64748b;" id="authSubtitle">Logg inn for å fortsette</div>
+    </div>
+
+    <!-- Tab: Logg inn / Registrer -->
+    <div style="display:flex;background:rgba(255,255,255,0.06);border-radius:10px;padding:3px;width:100%;gap:3px;">
+      <button id="tabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border:none;border-radius:7px;background:#6366f1;color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">Logg inn</button>
+      <button id="tabSignup" onclick="switchAuthTab('signup')" style="flex:1;padding:8px;border:none;border-radius:7px;background:transparent;color:#64748b;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;">Registrer</button>
+    </div>
+
+    <!-- E-post -->
+    <input id="authEmail" type="email" placeholder="E-postadresse" autocomplete="email"
+      style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 16px;color:#f1f5f9;font-size:1rem;font-family:inherit;outline:none;transition:border-color .2s;"
+      oninput="clearAuthError()" onkeydown="if(event.key==='Enter')handleAuth()"/>
+
+    <!-- Passord -->
+    <div style="width:100%;position:relative;">
+      <input id="authPassword" type="password" placeholder="Passord" autocomplete="current-password"
+        style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:12px 44px 12px 16px;color:#f1f5f9;font-size:1rem;font-family:inherit;outline:none;transition:border-color .2s;"
+        oninput="clearAuthError()" onkeydown="if(event.key==='Enter')handleAuth()"/>
+      <button onclick="toggleAuthPw()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:#64748b;" id="authPwEye">👁</button>
+    </div>
+
+    <!-- Feilmelding -->
+    <div id="authError" style="font-size:0.8rem;color:#f87171;opacity:0;transition:opacity .2s;margin-top:-8px;text-align:center;width:100%;min-height:16px;"></div>
+
+    <!-- Knapp -->
+    <button id="authBtn" onclick="handleAuth()"
+      style="width:100%;padding:13px;background:#6366f1;border:none;border-radius:10px;color:white;font-size:0.95rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;"
+      onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
+      Logg inn
+    </button>
+  </div>
+</div>
+
+<div id="appContent" style="display:none">
+<header>
+  <span class="icon">🏠</span>
+  <h1>Oppussingsplaner</h1>
+  <span class="subtitle">Dra kort mellom steg</span>
+  <span class="db-status" id="dbStatus"></span>
+  <div class="header-actions">
+    <a href="/app/" class="back-btn" title="Tilbake til alle planleggere">← Planleggere</a>
+    <span id="userEmail" style="font-size:12px;color:#64748b;margin-right:4px;"></span>
+    <label class="data-btn" title="Importer data fra en annen nettleser eller enhet">
+      📥 Importer data
+      <input type="file" accept=".json" onchange="importData(event)" />
+    </label>
+    <button class="data-btn" onclick="exportData()" title="Eksporter all data som JSON-fil">
+      📤 Eksporter data
+    </button>
+    <button class="export-btn" id="exportBtn" onclick="exportPDF()">
+      <span>📄</span> Eksporter PDF
+    </button>
+    <button class="data-btn" onclick="signOut()" title="Logg ut" style="color:#f87171;">
+      🚪 Logg ut
+    </button>
+  </div>
+  <!-- Mobil-meny -->
+  <button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleMobMenu()">⋯</button>
+  </div>
+</header>
+
+<!-- Mobil dropdown-meny -->
+<div class="mob-dropdown" id="mobDropdown">
+  <a href="/app/">← Alle planleggere</a>
+  <div class="divider"></div>
+  <label>
+    📥 Importer data
+    <input type="file" accept=".json" onchange="importData(event);closeMobMenu()" style="display:none" />
+  </label>
+  <button onclick="exportData();closeMobMenu()">📤 Eksporter data</button>
+  <button onclick="exportPDF();closeMobMenu()">📄 Eksporter PDF</button>
+  <div class="divider"></div>
+  <button onclick="signOut()" style="color:#f87171;">🚪 Logg ut</button>
+</div>
+
+<!-- ══ VELG PLAN-SKJERM ══ -->
+<div id="planScreen" style="display:none;position:fixed;inset:0;z-index:9998;background:#06080f;overflow-y:auto;">
+  <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;">
+    <div style="text-align:center;margin-bottom:40px;">
+      <div style="font-size:2rem;margin-bottom:12px;">✦ Bundly</div>
+      <h2 style="font-size:1.6rem;font-weight:800;color:#f1f5f9;margin-bottom:8px;">Velg din plan</h2>
+      <p style="color:#64748b;font-size:0.95rem;">Kom i gang med 7 dagers gratis prøveperiode</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:860px;width:100%;">
+
+      <!-- Starter -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Starter</div>
+        <div style="font-size:2.2rem;font-weight:800;color:#f1f5f9;">29 <span style="font-size:1rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
+        <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.88rem;display:flex;flex-direction:column;gap:8px;">
+          <li>✓ 1 planlegger</li>
+          <li>✓ Opptil 2 brukere</li>
+          <li>✓ 2 GB lagring</li>
+        </ul>
+        <button onclick="choosePlan('starter','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+      </div>
+
+      <!-- Familie -->
+      <div style="background:rgba(99,102,241,0.08);border:2px solid #6366f1;border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;position:relative;">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6366f1;color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;">⭐ Mest populær</div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Familie</div>
+        <div style="font-size:2.2rem;font-weight:800;color:#f1f5f9;">99 <span style="font-size:1rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
+        <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.88rem;display:flex;flex-direction:column;gap:8px;">
+          <li>✓ Alle planleggere</li>
+          <li>✓ Opptil 5 brukere</li>
+          <li>✓ 10 GB lagring</li>
+          <li>✓ PDF-import og Excel-eksport</li>
+        </ul>
+        <button onclick="choosePlan('familie','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+      </div>
+
+      <!-- Team -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Team</div>
+        <div style="font-size:2.2rem;font-weight:800;color:#f1f5f9;">299 <span style="font-size:1rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
+        <ul style="list-style:none;padding:0;margin:0;color:#94a3b8;font-size:0.88rem;display:flex;flex-direction:column;gap:8px;">
+          <li>✓ Alt i Familie</li>
+          <li>✓ Opptil 20 brukere</li>
+          <li>✓ 50 GB lagring</li>
+          <li>✓ Admin-panel og API</li>
+        </ul>
+        <button onclick="choosePlan('team','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+      </div>
+
+    </div>
+
+    <button onclick="signOut()" style="margin-top:32px;background:none;border:none;color:#475569;font-size:0.85rem;cursor:pointer;font-family:inherit;">← Logg ut</button>
+  </div>
+</div>
+
+<!-- Supabase-oppsett-banner (vises bare om ikke konfigurert) -->
+<div class="setup-banner" id="setupBanner">
+  ⚠️ <strong>Database ikke konfigurert</strong> — data lagres kun lokalt i denne nettleseren.
+  Følg stegene nedenfor for å koble til Supabase og dele med samboer.
+  &nbsp;·&nbsp; <a href="#" onclick="document.getElementById('setupBanner').style.display='none';return false" style="color:#fde047">Skjul</a>
+</div>
+
+<!-- Varselbanner for push-notifikasjoner -->
+<div class="notif-banner" id="notifBanner">
+  <span>🔔 Aktiver varsler for å få påminnelser om frister som nærmer seg</span>
+  <button onclick="enableNotifications()">Aktiver</button>
+  <button class="notif-banner-close" onclick="document.getElementById('notifBanner').classList.remove('show')">✕</button>
+</div>
+
+<!-- ══ FANER ══ -->
+<nav class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('dashboard')">🏠 Dashboard</button>
+  <button class="tab-btn" onclick="showTab('kanban')">🗂 Tavle</button>
+  <button class="tab-btn" onclick="showTab('gantt')">📅 Gantt</button>
+  <button class="tab-btn" onclick="showTab('budget')">💰 Budsjett</button>
+  <button class="tab-btn" onclick="showTab('forum')">💬 Diskusjon</button>
+  <button class="tab-btn" onclick="showTab('suppliers')">📋 Leverandører</button>
+  <button class="tab-btn" onclick="showTab('decisions')">📝 Beslutninger</button>
+  <button class="tab-btn" onclick="showTab('progress')">📸 Fremdrift</button>
+  <button class="tab-btn" onclick="showTab('docs')">📁 Arkiv</button>
+</nav>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="tab-content active" id="tab-dashboard">
+  <div class="dashboard-grid" id="dashboardGrid">
+    <!-- fylles av renderDashboard() -->
+  </div>
+</div>
+
+<!-- ══ KANBAN BOARD ══ -->
+<div class="tab-content" id="tab-kanban">
+<div class="board-wrapper" id="board">
+  <button class="add-column-btn" id="addColumnBtn" onclick="addColumn()">
+    <span style="font-size:1.2rem">+</span> Legg til kolonne
+  </button>
+</div>
+</div><!-- /tab-kanban -->
+
+<!-- ══ GANTT ══ -->
+<div class="tab-content" id="tab-gantt">
+<div class="gantt-section" id="ganttSection">
+  <div class="gantt-title-bar">
+    <span>📅</span>
+    <h2>Tidsplan — Gantt-diagram</h2>
+    <span id="ganttRange"></span>
+  </div>
+  <div id="ganttBody"></div>
+  <!-- Milepæler -->
+  <div class="milestone-add-form">
+    <div>
+      <div style="font-size:0.68rem;color:#64748b;margin-bottom:3px">Tittel</div>
+      <input type="text" id="msTitle" placeholder="Milepæl…" style="width:180px" />
+    </div>
+    <div>
+      <div style="font-size:0.68rem;color:#64748b;margin-bottom:3px">Dato</div>
+      <input type="date" id="msDate" />
+    </div>
+    <div>
+      <div style="font-size:0.68rem;color:#64748b;margin-bottom:3px">Farge</div>
+      <div class="milestone-color-pick" id="msColors"></div>
+    </div>
+    <button class="budget-add-btn" onclick="addMilestone()">+ Legg til milepæl</button>
+  </div>
+  <div class="milestone-list" id="milestoneList"></div>
+</div>
+
+<!-- Tooltip -->
+<div class="gantt-tooltip" id="ganttTooltip"></div>
+</div><!-- /tab-gantt -->
+
+<!-- ══ BUDSJETT ══ -->
+<div class="tab-content" id="tab-budget">
+<div class="budget-section">
+  <div class="budget-title-bar">
+    <span>💰</span>
+    <h2>Budsjett</h2>
+    <div class="pot-group">
+      <label for="potInput">Total pott:</label>
+      <input class="pot-input" id="potInput" type="text" inputmode="numeric"
+        value="500 000" oninput="fmtField(this);renderBudget()" onblur="fmtField(this)" />
+      <span style="font-size:0.8rem;color:#64748b">kr</span>
+    </div>
+    <button onclick="exportBudgetExcel()"
+      style="margin-left:auto;padding:6px 14px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);
+             border-radius:8px;color:#34d399;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:6px">
+      📊 Eksporter Excel
+    </button>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="budget-summary" id="budgetSummary"></div>
+
+  <!-- Progress bar -->
+  <div class="budget-progress-wrap">
+    <div class="budget-progress-labels">
+      <span>Estimert</span><span id="progressPct"></span>
+    </div>
+    <div class="budget-progress-track">
+      <div class="budget-progress-estimated" id="progEst"></div>
+      <div class="budget-progress-actual"    id="progAct"></div>
+    </div>
+  </div>
+
+  <!-- Analytics / kakediagram -->
+  <div class="budget-analytics" id="budgetAnalytics">
+    <div class="budget-chart-wrap">
+      <canvas id="budgetDonut" width="140" height="140"></canvas>
+    </div>
+    <div class="budget-legend" id="budgetLegend"></div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="budget-filter-bar">
+    <span class="budget-filter-label">Kategori:</span>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center" id="catFilterPills">
+      <!-- fylles dynamisk av renderCatPills() -->
+    </div>
+    <button onclick="openCatModal()"
+      style="padding:4px 10px;font-size:0.75rem;background:rgba(99,102,241,0.12);
+             border:1px solid rgba(99,102,241,0.3);border-radius:20px;color:#a5b4fc;cursor:pointer;
+             white-space:nowrap;flex-shrink:0">
+      + Ny kategori
+    </button>
+    <div class="budget-filter-range">
+      <span class="budget-filter-label">Sum:</span>
+      <input type="text" inputmode="numeric" id="filterMin" placeholder="Min kr"
+        oninput="fmtField(this);renderBudget()" onblur="fmtField(this)" />
+      <span style="color:#475569">–</span>
+      <input type="text" inputmode="numeric" id="filterMax" placeholder="Maks kr"
+        oninput="fmtField(this);renderBudget()" onblur="fmtField(this)" />
+      <span class="budget-filter-label">kr</span>
+      <button onclick="clearBudgetFilter()"
+        style="padding:4px 10px;font-size:0.72rem;background:rgba(255,255,255,0.06);
+               border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#94a3b8;cursor:pointer">
+        Nullstill
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="budget-table-wrap">
+    <table class="budget-table">
+      <thead>
+        <tr>
+          <th style="width:32px"></th>
+          <th>Beskrivelse</th>
+          <th>Kategori</th>
+          <th>Status</th>
+          <th class="num">Estimert</th>
+          <th class="num">Faktisk</th>
+          <th class="num">Avvik</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="budgetTableBody"></tbody>
+      <tfoot id="budgetTableFoot"></tfoot>
+    </table>
+  </div>
+
+  <!-- Add row form -->
+  <div class="budget-add-row">
+    <div class="budget-add-grid">
+      <div>
+        <div class="budget-field-label">Beskrivelse</div>
+        <input type="text" id="bName" placeholder="f.eks. Fliser bad…" />
+      </div>
+      <div>
+        <div class="budget-field-label">Kategori</div>
+        <select id="bCat">
+          <!-- fylles av renderCatSelects() -->
+        </select>
+      </div>
+      <div>
+        <div class="budget-field-label">Status</div>
+        <select id="bStatus">
+          <option value="planlagt">Planlagt</option>
+          <option value="bestilt">Bestilt</option>
+          <option value="betalt">Betalt</option>
+        </select>
+      </div>
+      <div>
+        <div class="budget-field-label">Estimert (kr)</div>
+        <input type="text" inputmode="numeric" id="bEst" placeholder="0"
+          oninput="fmtField(this)" onblur="fmtField(this)" />
+      </div>
+      <div>
+        <div class="budget-field-label">Faktisk (kr)</div>
+        <input type="text" inputmode="numeric" id="bAct" placeholder="0"
+          oninput="fmtField(this)" onblur="fmtField(this)" />
+      </div>
+      <div>
+        <button class="budget-add-btn" onclick="addBudgetPost()">+ Legg til</button>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <label class="pdf-upload-zone">
+        <input type="file" accept=".pdf" onchange="openPdfImport(event)" />
+        <span style="font-size:1.1rem">📄</span>
+        <div>
+          <div style="font-size:0.82rem;font-weight:600;color:#cbd5e1">Importer fra PDF</div>
+          <div style="font-size:0.72rem;color:#64748b">Last opp et budsjett eller tilbud — tall leses inn automatisk</div>
+        </div>
+      </label>
+    </div>
+    <div style="margin-top:8px">
+      <label class="pdf-upload-zone">
+        <input type="file" accept=".csv,.xlsx,.xls" onchange="openCsvImport(event)" />
+        <span style="font-size:1.1rem">📊</span>
+        <div>
+          <div style="font-size:0.82rem;font-weight:600;color:#cbd5e1">Importer fra CSV / Excel</div>
+          <div style="font-size:0.72rem;color:#64748b">Kolonner: Beskrivelse, Estimert, Faktisk, Kategori (valgfri)</div>
+        </div>
+      </label>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab-budget -->
+
+<!-- ══ FORUM ══ -->
+<div class="tab-content" id="tab-forum">
+
+<!-- ══ KATEGORI MODAL ══ -->
+<div class="cat-modal-overlay" id="catModalOverlay">
+  <div class="cat-modal">
+    <div class="cat-modal-header">
+      <span style="font-size:1.2rem">🏷</span>
+      <h2>Kategorier</h2>
+      <button class="btn-cancel" style="padding:5px 12px" onclick="closeCatModal()">✕</button>
+    </div>
+    <div class="cat-modal-body">
+      <div id="customCatList"><!-- fylles dynamisk --></div>
+      <div class="cat-add-form">
+        <label>Legg til ny kategori</label>
+        <div class="cat-add-row">
+          <input class="cat-icon-input" id="catIconInput" type="text"
+            placeholder="📂" maxlength="2" title="Skriv inn et emoji-ikon" />
+          <input class="cat-name-input" id="catNameInput" type="text"
+            placeholder="Navn på kategori…" maxlength="30"
+            onkeydown="if(event.key==='Enter')saveCat()" />
+        </div>
+        <label>Farge</label>
+        <div class="color-swatches" id="catColorSwatches"></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="btn-cancel" onclick="closeCatModal()">Avbryt</button>
+          <button class="btn-primary" style="flex:1" onclick="saveCat()">+ Legg til kategori</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PDF IMPORT MODAL ══ -->
+<div class="pdf-modal-overlay" id="pdfModalOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-modal-header">
+      <span style="font-size:1.2rem">📄</span>
+      <h2>Importer fra PDF</h2>
+      <span id="pdfFileName" style="font-size:0.78rem;color:#64748b"></span>
+      <button class="btn-cancel" style="padding:5px 12px" onclick="closePdfModal()">✕</button>
+    </div>
+    <div class="pdf-modal-body" id="pdfModalBody">
+      <div class="pdf-loading">
+        <div class="spinner"></div>
+        <div>Leser PDF…</div>
+      </div>
+    </div>
+    <div class="pdf-modal-footer">
+      <span id="pdfSelectedCount" style="font-size:0.8rem;color:#64748b;flex:1"></span>
+      <button class="btn-cancel" onclick="closePdfModal()">Avbryt</button>
+      <button class="btn-primary" style="flex:0;padding:8px 24px" onclick="importPdfRows()">Legg til valgte poster</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CSV IMPORT MODAL ══ -->
+<div class="pdf-modal-overlay" id="csvModalOverlay">
+  <div class="pdf-modal">
+    <div class="pdf-modal-header">
+      <span style="font-size:1.2rem">📊</span>
+      <h2>Importer fra CSV / Excel</h2>
+      <span id="csvFileName" style="font-size:0.78rem;color:#64748b"></span>
+      <button class="btn-cancel" style="padding:5px 12px" onclick="closeCsvModal()">✕</button>
+    </div>
+    <div class="pdf-modal-body" id="csvModalBody">
+      <div class="pdf-loading"><div class="spinner"></div><div>Leser fil…</div></div>
+    </div>
+    <div class="pdf-modal-footer">
+      <span id="csvSelectedCount" style="font-size:0.8rem;color:#64748b;flex:1"></span>
+      <button class="btn-cancel" onclick="closeCsvModal()">Avbryt</button>
+      <button class="btn-primary" style="flex:0;padding:8px 24px" onclick="importCsvRows()">Legg til valgte poster</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORUM ══ -->
+<div class="forum-section">
+  <div class="forum-title-bar">
+    <span>💬</span>
+    <h2>Diskusjon</h2>
+    <span id="forumTopicCount" style="font-size:0.78rem;color:#64748b"></span>
+    <button class="forum-new-btn" onclick="openNewTopic()">+ Nytt tema</button>
+  </div>
+  <div id="forumBody"></div>
+</div>
+
+</div><!-- /tab-forum -->
+
+<!-- ══ LEVERANDØRBOK ══ -->
+<div class="tab-content" id="tab-suppliers">
+<div class="suppliers-section">
+  <div class="suppliers-title-bar">
+    <span>📋</span>
+    <h2>Leverandørbok</h2>
+    <span id="supplierCount" style="font-size:0.78rem;color:#64748b"></span>
+    <div class="suppliers-filter">
+      <select id="supplierFieldFilter" onchange="renderSuppliers()">
+        <option value="">Alle fagfelt</option>
+      </select>
+    </div>
+  </div>
+  <div class="suppliers-grid" id="suppliersGrid"></div>
+  <div class="supplier-add-form">
+    <div style="font-size:0.82rem;font-weight:600;color:#94a3b8;margin-bottom:10px">Legg til leverandør</div>
+    <div class="supplier-add-grid">
+      <div>
+        <div class="budget-field-label">Navn *</div>
+        <input type="text" id="supName" placeholder="Firma / person…" />
+      </div>
+      <div>
+        <div class="budget-field-label">Fagfelt</div>
+        <input type="text" id="supField" placeholder="f.eks. Rørlegger…" />
+      </div>
+      <div>
+        <div class="budget-field-label">Telefon</div>
+        <input type="tel" id="supPhone" placeholder="Tlf…" />
+      </div>
+      <div>
+        <div class="budget-field-label">E-post</div>
+        <input type="email" id="supEmail" placeholder="epost@…" />
+      </div>
+      <div>
+        <div class="budget-field-label">Nettside</div>
+        <input type="url" id="supWebsite" placeholder="https://…" />
+      </div>
+      <div>
+        <div class="budget-field-label">Vurdering</div>
+        <div class="star-picker" id="supStarPicker">
+          <span data-val="1" onclick="setSupRating(1)">★</span>
+          <span data-val="2" onclick="setSupRating(2)">★</span>
+          <span data-val="3" onclick="setSupRating(3)">★</span>
+          <span data-val="4" onclick="setSupRating(4)">★</span>
+          <span data-val="5" onclick="setSupRating(5)">★</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1">
+        <div class="budget-field-label">Notater</div>
+        <input type="text" id="supNotes" placeholder="Korte notater…" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;font-family:inherit;outline:none" />
+      </div>
+      <button class="budget-add-btn" onclick="addSupplier()">+ Legg til</button>
+    </div>
+  </div>
+</div>
+</div><!-- /tab-suppliers -->
+
+<!-- ══ BESLUTNINGSLOGG ══ -->
+<div class="tab-content" id="tab-decisions">
+<div class="decisions-section">
+  <div class="decisions-title-bar">
+    <span>📝</span>
+    <h2>Beslutningslogg</h2>
+    <span id="decisionCount" style="font-size:0.78rem;color:#64748b"></span>
+    <div class="decisions-filter">
+      <select id="decisionCatFilter" onchange="renderDecisions()">
+        <option value="">Alle kategorier</option>
+        <option value="Materialer">Materialer</option>
+        <option value="Design">Design</option>
+        <option value="Økonomi">Økonomi</option>
+        <option value="Leverandør">Leverandør</option>
+        <option value="Annet">Annet</option>
+      </select>
+    </div>
+  </div>
+  <div class="decisions-timeline" id="decisionsTimeline"></div>
+  <div class="decisions-add-form">
+    <div style="font-size:0.82rem;font-weight:600;color:#94a3b8;margin-bottom:8px">Ny beslutning</div>
+    <div class="decisions-add-grid">
+      <div>
+        <div class="budget-field-label">Dato</div>
+        <input type="date" id="decDate" />
+      </div>
+      <div>
+        <div class="budget-field-label">Tittel *</div>
+        <input type="text" id="decTitle" placeholder="Kort tittel…" />
+      </div>
+      <div>
+        <div class="budget-field-label">Kategori</div>
+        <select id="decCat">
+          <option value="Materialer">Materialer</option>
+          <option value="Design">Design</option>
+          <option value="Økonomi">Økonomi</option>
+          <option value="Leverandør">Leverandør</option>
+          <option value="Annet">Annet</option>
+        </select>
+      </div>
+      <div>
+        <div class="budget-field-label">Forfatter</div>
+        <input type="text" id="decAuthor" placeholder="Navn…" />
+      </div>
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:2">
+        <div class="budget-field-label">Beskrivelse</div>
+        <input type="text" id="decDesc" placeholder="Hva ble besluttet og hvorfor?" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;font-family:inherit;outline:none" />
+      </div>
+      <div style="flex:1">
+        <div class="budget-field-label">Etiketter (komma)</div>
+        <input type="text" id="decTags" placeholder="f.eks. bad, fliser…" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:8px 10px;color:#e2e8f0;font-size:0.82rem;font-family:inherit;outline:none" />
+      </div>
+      <button class="budget-add-btn" onclick="addDecision()">+ Legg til</button>
+    </div>
+  </div>
+</div>
+</div><!-- /tab-decisions -->
+
+<!-- ══ FREMDRIFTSBILDER ══ -->
+<div class="tab-content" id="tab-progress">
+<div class="progress-photos-section">
+  <div class="progress-photos-title-bar">
+    <span>📸</span>
+    <h2>Fremdriftsbilder</h2>
+    <span id="photoCount" style="font-size:0.78rem;color:#64748b"></span>
+  </div>
+  <div class="photo-upload-form">
+    <div>
+      <div class="budget-field-label">Rom</div>
+      <select id="photoRoom">
+        <option value="Stue">Stue</option>
+        <option value="Kjøkken">Kjøkken</option>
+        <option value="Bad">Bad</option>
+        <option value="Soverom">Soverom</option>
+        <option value="Gang">Gang</option>
+        <option value="Utvendig">Utvendig</option>
+        <option value="Annet">Annet</option>
+        <option value="_custom">+ Nytt rom…</option>
+      </select>
+    </div>
+    <div id="customRoomWrap" style="display:none">
+      <div class="budget-field-label">Romnavn</div>
+      <input type="text" id="customRoomInput" placeholder="Skriv romnavn…" />
+    </div>
+    <div>
+      <div class="budget-field-label">Beskrivelse</div>
+      <input type="text" id="photoCaption" placeholder="Valgfri beskrivelse…" style="width:220px" />
+    </div>
+    <div>
+      <div class="budget-field-label">Dato</div>
+      <input type="date" id="photoDate" />
+    </div>
+    <label class="receipt-upload-btn">
+      📷 Last opp bilde
+      <input type="file" id="photoFileInput" accept="image/*" multiple onchange="handlePhotoUpload()" />
+    </label>
+  </div>
+  <div class="photo-rooms-section" id="photoRoomsSection">
+    <div class="photo-empty">Ingen bilder ennå — last opp det første!</div>
+  </div>
+</div>
+</div><!-- /tab-progress -->
+
+<!-- ══ DOKUMENTARKIV ══ -->
+<div class="tab-content" id="tab-docs">
+<div class="docs-section">
+
+  <!-- Title bar -->
+  <div class="docs-title-bar">
+    <span>📁</span>
+    <h2>Dokumentarkiv</h2>
+    <span id="docsCount" style="font-size:0.78rem;color:#64748b"></span>
+    <button class="docs-upload-btn" onclick="document.getElementById('docFileInput').click()">
+      ⬆ Last opp dokument
+    </button>
+    <input type="file" id="docFileInput" style="display:none"
+      accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png,.gif,.webp"
+      multiple onchange="handleDocUpload(event)" />
+  </div>
+
+  <!-- Filter bar -->
+  <div class="docs-filter-bar">
+    <div style="display:flex;gap:5px;flex-wrap:wrap" id="docCatPills">
+      <button class="cat-pill active" data-dcat="" onclick="setDocFilter('')">Alle</button>
+      <button class="cat-pill" data-dcat="Kontrakter"   onclick="setDocFilter('Kontrakter')">📜 Kontrakter</button>
+      <button class="cat-pill" data-dcat="Tilbud"       onclick="setDocFilter('Tilbud')">💬 Tilbud</button>
+      <button class="cat-pill" data-dcat="Tegninger"    onclick="setDocFilter('Tegninger')">📐 Tegninger</button>
+      <button class="cat-pill" data-dcat="Tillatelser"  onclick="setDocFilter('Tillatelser')">🏛 Tillatelser</button>
+      <button class="cat-pill" data-dcat="Forsikring"   onclick="setDocFilter('Forsikring')">🛡 Forsikring</button>
+      <button class="cat-pill" data-dcat="Kvitteringer" onclick="setDocFilter('Kvitteringer')">🧾 Kvitteringer</button>
+      <button class="cat-pill" data-dcat="Annet"        onclick="setDocFilter('Annet')">📦 Annet</button>
+    </div>
+    <div style="margin-left:auto">
+      <input type="text" id="docSearch" placeholder="🔍 Søk i arkivet…"
+        oninput="renderDocuments()"
+        style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);
+               border-radius:8px;padding:6px 12px;color:#e2e8f0;font-size:0.8rem;
+               outline:none;width:200px;font-family:inherit" />
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  <div class="docs-dropzone" id="docsDropzone">
+    <div class="docs-dropzone-inner">
+      <div style="font-size:2.5rem">📁</div>
+      <div style="font-size:0.9rem;color:#94a3b8;margin-top:6px">Slipp filer her, eller klikk «Last opp dokument»</div>
+      <div style="font-size:0.75rem;color:#475569;margin-top:4px">Støtter PDF, Word, Excel og bilder</div>
+    </div>
+  </div>
+
+  <!-- Document grid -->
+  <div class="docs-grid" id="docsGrid"></div>
+
+</div>
+</div><!-- /tab-docs -->
+
+<!-- ══ DOKUMENT UPLOAD MODAL ══ -->
+<div class="doc-upload-modal-overlay" id="docUploadOverlay">
+  <div class="doc-upload-modal">
+    <div class="cat-modal-header">
+      <span style="font-size:1.2rem">📄</span>
+      <h2>Last opp dokument</h2>
+      <button class="btn-cancel" style="padding:5px 12px" onclick="closeDocUploadModal()">✕</button>
+    </div>
+    <div class="cat-modal-body" id="docUploadBody">
+      <!-- fylles dynamisk -->
+    </div>
+  </div>
+</div>
+
+</div><!-- /appContent -->
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="" />
+</div>
+
+<!-- ══ NYTT TEMA MODAL ══ -->
+<div class="new-topic-modal" id="newTopicModal">
+  <div class="new-topic-box">
+    <h2>Nytt diskusjonstema</h2>
+    <div>
+      <label>Ditt navn</label>
+      <input type="text" id="ntAuthor" placeholder="Navn…" />
+    </div>
+    <div>
+      <label>Tittel på tema</label>
+      <input type="text" id="ntTitle" placeholder="Hva vil du diskutere?" />
+    </div>
+    <div>
+      <label>Første innlegg</label>
+      <textarea id="ntBody" rows="4" placeholder="Skriv her…"></textarea>
+    </div>
+    <div>
+      <label>Bilder (valgfritt)</label>
+      <div class="img-upload-bar">
+        <label class="img-upload-btn">
+          📷 Last opp bilder
+          <input type="file" id="ntImages" accept="image/*" multiple onchange="previewImages('ntImages','ntPreview')" />
+        </label>
+      </div>
+      <div class="img-preview-strip" id="ntPreview"></div>
+    </div>
+    <div class="new-topic-actions">
+      <button class="btn-cancel" onclick="closeNewTopic()">Avbryt</button>
+      <button class="btn-primary" onclick="submitNewTopic()">Opprett tema</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT MODAL ══ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" style="max-width:520px;max-height:90vh;overflow-y:auto">
+    <h2>Rediger kort</h2>
+    <div>
+      <label>Tittel</label>
+      <input type="text" id="editTitle" placeholder="Kort tittel..." />
+    </div>
+    <div>
+      <label>Beskrivelse</label>
+      <textarea id="editDesc" rows="3" placeholder="Beskrivelse (valgfritt)..."></textarea>
+    </div>
+    <div class="modal-row">
+      <div>
+        <label>Viktighet</label>
+        <select id="editPriority">
+          <option value="">Ingen</option>
+          <option value="lav">🟢 Lav</option>
+          <option value="middels">🟡 Middels</option>
+          <option value="høy">🟠 Høy</option>
+          <option value="kritisk">🔴 Kritisk</option>
+        </select>
+      </div>
+      <div>
+        <label>Etikett</label>
+        <select id="editTag">
+          <option value="">Ingen</option>
+          <option value="budsjett">💰 Budsjett</option>
+          <option value="material">🧱 Material</option>
+          <option value="håndverker">🔧 Håndverker</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row">
+      <div>
+        <label>Ansvarlig person</label>
+        <input type="text" id="editAssignee" placeholder="Navn på ansvarlig..." />
+      </div>
+    </div>
+    <div class="modal-row">
+      <div>
+        <label>Startdato</label>
+        <input type="date" id="editStart" />
+      </div>
+      <div>
+        <label>Frist / sluttdato</label>
+        <input type="date" id="editDue" />
+      </div>
+    </div>
+    <!-- Vedlegg -->
+    <div>
+      <label>Vedlegg</label>
+      <div class="attach-list" id="editAttachList"></div>
+      <label class="attach-upload-btn">
+        📎 Last opp vedlegg
+        <input type="file" id="editAttachInput"
+          accept="image/*,.pdf,.doc,.docx,.xlsx"
+          multiple onchange="handleAttachUpload()" />
+      </label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Avbryt</button>
+      <button class="btn-primary" onclick="saveEdit()">Lagre</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ KVITTERING MODAL ══ -->
+<div class="receipt-modal-overlay" id="receiptModalOverlay">
+  <div class="receipt-modal">
+    <div class="receipt-modal-header">
+      <span style="font-size:1.2rem">📷</span>
+      <h2 id="receiptModalTitle">Kvitteringer</h2>
+      <button class="btn-cancel" style="padding:5px 12px" onclick="closeReceiptModal()">✕</button>
+    </div>
+    <div class="receipt-modal-body">
+      <div class="receipt-thumb-grid" id="receiptThumbGrid"></div>
+      <label class="receipt-upload-btn">
+        📷 Last opp kvittering
+        <input type="file" id="receiptFileInput" accept="image/*" multiple onchange="handleReceiptUpload()" />
+      </label>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
