@@ -1361,6 +1361,26 @@ async function adminInviteUser() {
   btn.textContent = 'Send invitasjon'; btn.disabled = false;
 }
 
+async function adminDeleteUser() {
+  const email = document.getElementById('modalUserEmail').textContent;
+  if (!confirm(`⚠️ Er du sikker på at du vil slette ${email} permanent?\n\nDette kan ikke angres.`)) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+      body: JSON.stringify({ action: 'delete_user', userId: selectedUserId }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      closeUserModal();
+      await fetchLiveUsers().then(users => { LIVE_USERS = users; renderLiveUsersTable(); renderLiveKPIs(); });
+      alert(`✅ Brukeren ${email} er slettet.`);
+    } else {
+      alert('Feil: ' + (data.error || 'Ukjent feil'));
+    }
+  } catch(e) { alert('Noe gikk galt: ' + e.message); }
+}
+
 function renderNewestUsers() {
   const sorted = [...USERS].sort((a,b) => b.joined.localeCompare(a.joined)).slice(0,8);
   const el = document.getElementById('newest-users');
@@ -1714,6 +1734,16 @@ document.getElementById('userModal').addEventListener('click', e => {
       <div id="inviteResult" class="invite-result"></div>
       <div class="user-modal-row" style="margin-top:10px">
         <button class="btn btn-primary" id="inviteBtn" onclick="adminInviteUser()">Send invitasjon</button>
+      </div>
+    </div>
+
+    <hr class="user-modal-divider">
+
+    <!-- Slett bruker -->
+    <div class="user-modal-section">
+      <label>Faresone</label>
+      <div class="user-modal-row" style="justify-content:flex-start">
+        <button class="btn btn-danger" onclick="adminDeleteUser()">🗑 Slett bruker permanent</button>
       </div>
     </div>
 

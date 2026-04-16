@@ -117,6 +117,24 @@ exports.handler = async (event) => {
       return json(200, { ok: true });
     }
 
+    // ── Slett bruker
+    if (action === 'delete_user') {
+      if (!userId) return json(400, { error: 'Mangler userId' });
+      // Slett subscriptions-rad først
+      await fetch(`${SB}/rest/v1/subscriptions?user_id=eq.${userId}`, {
+        method: 'DELETE', headers: HDR,
+      });
+      // Slett auth-bruker
+      const delRes = await fetch(`${SB}/auth/v1/admin/users/${userId}`, {
+        method: 'DELETE', headers: HDR,
+      });
+      if (!delRes.ok && delRes.status !== 204) {
+        const err = await delRes.json();
+        return json(400, { error: err.message || 'Kunne ikke slette bruker' });
+      }
+      return json(200, { ok: true });
+    }
+
     return json(400, { error: 'Ukjent action' });
 
   } catch (err) {

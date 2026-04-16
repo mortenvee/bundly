@@ -12,6 +12,7 @@ function showTab(name) {
       btn.classList.add('active');
   });
   if (name === 'dashboard') renderDashboard();
+  if (name === 'budget')    renderBudget();
   if (name === 'gantt')     renderGantt();
   if (name === 'suppliers') renderSuppliers();
   if (name === 'decisions') renderDecisions();
@@ -1760,7 +1761,8 @@ function importPdfRows() {
     });
   });
   closePdfModal();
-  renderBudget();
+  showTab('budget');
+  saveState();
 }
 
 function closePdfModal() {
@@ -1978,7 +1980,7 @@ function importCsvRows() {
     });
   });
   closeCsvModal();
-  renderBudget();
+  showTab('budget');
   saveState();
 }
 
@@ -2221,17 +2223,18 @@ async function exportPDF() {
   const ml = 14, mr = 14, cw = pw - ml - mr;
   let y = 0;
 
-  // ── Farger ──
+  // ── Farger (lyst tema) ──
   const C = {
-    bg:      [22,  33,  62],
-    surface: [30,  41,  59],
+    bg:      [255, 255, 255],
+    surface: [245, 247, 252],
     accent:  [99,  102, 241],
-    text:    [226, 232, 240],
+    text:    [15,  23,  42],
     muted:   [100, 116, 139],
-    green:   [74,  222, 128],
-    yellow:  [250, 204, 21],
-    orange:  [251, 146, 60],
-    red:     [248, 113, 113],
+    green:   [22,  163, 74],
+    yellow:  [202, 138, 4],
+    orange:  [234, 88,  12],
+    red:     [220, 38,  38],
+    border:  [226, 232, 240],
   };
 
   const COL_RGB = [
@@ -2250,7 +2253,7 @@ async function exportPDF() {
     setFill(rgb);
     doc.roundedRect(x, yy, w, h, r, r, 'F');
   }
-  function line(x1,yy1,x2,yy2,rgb=[50,65,85],lw=0.3) {
+  function line(x1,yy1,x2,yy2,rgb=[200,210,220],lw=0.3) {
     doc.setLineWidth(lw); setDraw(rgb);
     doc.line(x1,yy1,x2,yy2);
   }
@@ -2385,13 +2388,13 @@ async function exportPDF() {
       styles: {
         fontSize: 7.5, cellPadding: 3,
         fillColor: C.surface, textColor: C.text,
-        lineColor: [40,54,74], lineWidth: 0.2,
+        lineColor: [226,232,240], lineWidth: 0.2,
       },
       headStyles: {
-        fillColor: [40,54,74], textColor: C.muted,
+        fillColor: [237,242,247], textColor: C.muted,
         fontSize: 6.5, fontStyle: 'bold',
       },
-      alternateRowStyles: { fillColor: [26,38,56] },
+      alternateRowStyles: { fillColor: [249,250,252] },
       columnStyles: {
         0: { cellWidth: 65 },
         1: { cellWidth: 38 },
@@ -2462,7 +2465,7 @@ async function exportPDF() {
   months2.forEach(m => {
     const mx = CHART_X + m.s/GTOTAL*CHART_W;
     const mw = m.w/GTOTAL*CHART_W;
-    line(mx, y, mx, y+mhh, [50,65,85], 0.3);
+    line(mx, y, mx, y+mhh, [200,210,220], 0.3);
     setFont(6, 'bold', C.muted);
     doc.text(m.label.toUpperCase(), mx + mw/2, y+4.5, { align:'center' });
   });
@@ -2482,7 +2485,7 @@ async function exportPDF() {
     const rgb = COL_RGB[ci % COL_RGB.length];
 
     // Gruppe-header rad
-    rect(ml, y, cw, 5.5, [26,38,56]);
+    rect(ml, y, cw, 5.5, [240,244,250]);
     rect(ml, y, 2, 5.5, rgb);
     setFont(6.5, 'bold', C.muted);
     doc.text(col.title.toUpperCase(), ml+5, y+3.8);
@@ -2510,7 +2513,7 @@ async function exportPDF() {
       }
 
       // Skillelinje
-      line(ml, y+rh, pw-mr, y+rh, [30,44,62], 0.2);
+      line(ml, y+rh, pw-mr, y+rh, [226,232,240], 0.2);
       y += rh;
     });
   });
@@ -2548,7 +2551,7 @@ async function exportPDF() {
   y += 26;
 
   // Fremdriftslinje
-  rect(ml, y, cw, 5, [40,54,74], 2);
+  rect(ml, y, cw, 5, [226,232,240], 2);
   const estPct2 = pot>0 ? Math.min(totalEst/pot, 1) : 0;
   const actPct2 = pot>0 ? Math.min(totalAct/pot, 1) : 0;
   rect(ml, y, cw*estPct2, 5, [99,102,241,0.4]||C.accent, 2);
@@ -2595,13 +2598,13 @@ async function exportPDF() {
     styles: {
       fontSize: 7.5, cellPadding: 3,
       fillColor: C.surface, textColor: C.text,
-      lineColor: [40,54,74], lineWidth: 0.2,
+      lineColor: [226,232,240], lineWidth: 0.2,
     },
     headStyles: {
-      fillColor: [40,54,74], textColor: C.muted,
+      fillColor: [237,242,247], textColor: C.muted,
       fontSize: 6.5, fontStyle: 'bold',
     },
-    alternateRowStyles: { fillColor: [26,38,56] },
+    alternateRowStyles: { fillColor: [249,250,252] },
     columnStyles: {
       0: { cellWidth: 52 },
       1: { cellWidth: 28 },
@@ -2613,7 +2616,7 @@ async function exportPDF() {
     didParseCell: (data) => {
       // Totalrad
       if (data.row.index === budgetRows.length-1) {
-        data.cell.styles.fillColor = [40,54,74];
+        data.cell.styles.fillColor = [226,232,240];
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.textColor = C.text;
       }
@@ -2659,13 +2662,13 @@ async function exportPDF() {
       styles: {
         fontSize: 7.5, cellPadding: 3,
         fillColor: C.surface, textColor: C.text,
-        lineColor: [40, 54, 74], lineWidth: 0.2,
+        lineColor: [226,232,240], lineWidth: 0.2,
       },
       headStyles: {
-        fillColor: [40, 54, 74], textColor: C.muted,
+        fillColor: [237,242,247], textColor: C.muted,
         fontSize: 6.5, fontStyle: 'bold',
       },
-      alternateRowStyles: { fillColor: [26, 38, 56] },
+      alternateRowStyles: { fillColor: [249,250,252] },
       columnStyles: {
         0: { cellWidth: 36 },
         1: { cellWidth: 28 },
@@ -2710,13 +2713,13 @@ async function exportPDF() {
       styles: {
         fontSize: 7.5, cellPadding: 3,
         fillColor: C.surface, textColor: C.text,
-        lineColor: [40, 54, 74], lineWidth: 0.2,
+        lineColor: [226,232,240], lineWidth: 0.2,
       },
       headStyles: {
-        fillColor: [40, 54, 74], textColor: C.muted,
+        fillColor: [237,242,247], textColor: C.muted,
         fontSize: 6.5, fontStyle: 'bold',
       },
-      alternateRowStyles: { fillColor: [26, 38, 56] },
+      alternateRowStyles: { fillColor: [249,250,252] },
       columnStyles: {
         0: { cellWidth: 24 },
         1: { cellWidth: 45 },
@@ -2769,13 +2772,13 @@ async function exportPDF() {
           styles: {
             fontSize: 7, cellPadding: 2.5,
             fillColor: C.surface, textColor: C.text,
-            lineColor: [40, 54, 74], lineWidth: 0.2,
+            lineColor: [226,232,240], lineWidth: 0.2,
           },
           headStyles: {
-            fillColor: [40, 54, 74], textColor: C.muted,
+            fillColor: [237,242,247], textColor: C.muted,
             fontSize: 6, fontStyle: 'bold',
           },
-          alternateRowStyles: { fillColor: [26, 38, 56] },
+          alternateRowStyles: { fillColor: [249,250,252] },
           columnStyles: {
             0: { cellWidth: 28 },
             1: { cellWidth: 22 },
@@ -2791,12 +2794,80 @@ async function exportPDF() {
     });
   }
 
+  // ════════════════════ FREMDRIFTSBILDER ════════════════════
+  if (progressPhotos.length > 0) {
+    doc.addPage();
+    rect(0, 0, pw, ph, C.bg);
+    rect(0, 0, pw, 22, C.surface);
+    rect(0, 20, pw, 2, C.accent);
+    setFont(11, 'bold', C.text);
+    doc.text('Fremdriftsbilder', ml, 13);
+    setFont(7, 'normal', C.muted);
+    doc.text(`${progressPhotos.length} bilde${progressPhotos.length !== 1 ? 'r' : ''}`, ml, 18);
+    y = 30;
+    const imgW = (cw - 6) / 3;
+    const imgH = imgW * 0.65;
+    let imgCol = 0;
+    for (const photo of progressPhotos) {
+      if (!photo.url) continue;
+      try {
+        const ix = ml + imgCol * (imgW + 3);
+        const iy = y;
+        doc.addImage(photo.url, 'JPEG', ix, iy, imgW, imgH, '', 'FAST');
+        if (photo.caption) {
+          setFont(6, 'normal', C.muted);
+          const cap = (photo.caption || '').slice(0, 32);
+          doc.text(cap, ix + imgW / 2, iy + imgH + 4, { align: 'center' });
+        }
+        imgCol++;
+        if (imgCol >= 3) {
+          imgCol = 0;
+          y += imgH + 12;
+          if (y > ph - imgH - 20) { doc.addPage(); rect(0, 0, pw, ph, C.bg); y = 18; }
+        }
+      } catch(e) { /* hopp over bilder som ikke kan lastes */ }
+    }
+  }
+
+  // ════════════════════ DOKUMENTARKIV ════════════════════
+  if (archiveDocs.length > 0) {
+    doc.addPage();
+    rect(0, 0, pw, ph, C.bg);
+    rect(0, 0, pw, 22, C.surface);
+    rect(0, 20, pw, 2, C.accent);
+    setFont(11, 'bold', C.text);
+    doc.text('Dokumentarkiv', ml, 13);
+    setFont(7, 'normal', C.muted);
+    doc.text(`${archiveDocs.length} dokument${archiveDocs.length !== 1 ? 'er' : ''}`, ml, 18);
+    y = 30;
+    const docRows = archiveDocs.map(d => [
+      d.name || '–',
+      d.category || '–',
+      (d.description || '').slice(0, 60) || '–',
+      d.uploadedBy || '–',
+      d.date ? new Date(d.date).toLocaleDateString('nb-NO') : '–',
+    ]);
+    doc.autoTable({
+      startY: y,
+      head: [['Filnavn', 'Kategori', 'Beskrivelse', 'Lastet opp av', 'Dato']],
+      body: docRows,
+      margin: { left: ml, right: mr },
+      styles: { fontSize: 7.5, cellPadding: 3, fillColor: C.surface, textColor: C.text, lineColor: C.border, lineWidth: 0.2 },
+      headStyles: { fillColor: [237,242,247], textColor: C.muted, fontSize: 6.5, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [249,250,252] },
+      columnStyles: {
+        0: { cellWidth: 50 }, 1: { cellWidth: 28 },
+        2: { cellWidth: 'auto' }, 3: { cellWidth: 30 }, 4: { cellWidth: 22 },
+      },
+    });
+  }
+
   // Bunntekst alle sider
   const pageCount = doc.getNumberOfPages();
   for (let i=1; i<=pageCount; i++) {
     doc.setPage(i);
     setFont(6.5, 'normal', C.muted);
-    doc.text('Oppussingsplaner · Konfidensielt', ml, ph-5);
+    doc.text('Bundly · Konfidensielt', ml, ph-5);
     doc.text(`Side ${i} av ${pageCount}`, pw-mr, ph-5, { align:'right' });
     line(ml, ph-9, pw-mr, ph-9);
   }
@@ -3133,6 +3204,57 @@ document.addEventListener('click', e => {
 async function signOut() {
   await db.auth?.signOut();
   window.location.href = '/';
+}
+
+/* ════════════════════════════════════
+   INVITASJONSMODAL (bruker-til-bruker)
+════════════════════════════════════ */
+function openInviteModal() {
+  document.getElementById('inviteEmailApp').value = '';
+  const r = document.getElementById('inviteAppResult');
+  r.style.display = 'none'; r.textContent = '';
+  document.getElementById('inviteModalOverlay').classList.add('open');
+}
+function closeInviteModal() {
+  document.getElementById('inviteModalOverlay').classList.remove('open');
+}
+document.getElementById('inviteModalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeInviteModal();
+});
+
+async function sendAppInvite() {
+  const email = document.getElementById('inviteEmailApp').value.trim();
+  const resultEl = document.getElementById('inviteAppResult');
+  if (!email || !email.includes('@')) {
+    resultEl.style.cssText = 'display:block;background:rgba(239,68,68,0.15);color:#f87171;padding:7px 10px;border-radius:6px;font-size:0.8rem';
+    resultEl.textContent = 'Skriv inn en gyldig e-postadresse.';
+    return;
+  }
+  const btn = document.getElementById('inviteAppBtn');
+  btn.textContent = 'Sender…'; btn.disabled = true;
+
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const userId = session?.user?.id;
+    const res = await fetch('/.netlify/functions/admin-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-secret': 'bundly_admin_2024' },
+      body: JSON.stringify({ action: 'invite', userId, email }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      resultEl.style.cssText = 'display:block;background:rgba(16,185,129,0.15);color:#4ade80;padding:7px 10px;border-radius:6px;font-size:0.8rem';
+      resultEl.textContent = `✅ Invitasjon sendt til ${email}`;
+      document.getElementById('inviteEmailApp').value = '';
+    } else {
+      resultEl.style.cssText = 'display:block;background:rgba(239,68,68,0.15);color:#f87171;padding:7px 10px;border-radius:6px;font-size:0.8rem';
+      resultEl.textContent = 'Feil: ' + (data.error || 'Ukjent feil');
+    }
+  } catch(e) {
+    resultEl.style.cssText = 'display:block;background:rgba(239,68,68,0.15);color:#f87171;padding:7px 10px;border-radius:6px;font-size:0.8rem';
+    resultEl.textContent = 'Noe gikk galt: ' + e.message;
+  }
+  btn.textContent = 'Send invitasjon'; btn.disabled = false;
 }
 
 function getPendingPayment(userId) {

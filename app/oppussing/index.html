@@ -77,6 +77,9 @@
     <button class="export-btn" id="exportBtn" onclick="exportPDF()">
       <span>📄</span> Eksporter PDF
     </button>
+    <button class="data-btn" onclick="openInviteModal()" title="Inviter noen til prosjektet">
+      👥 Inviter
+    </button>
     <button class="data-btn" onclick="signOut()" title="Logg ut" style="color:#f87171;">
       🚪 Logg ut
     </button>
@@ -96,8 +99,30 @@
   </label>
   <button onclick="exportData();closeMobMenu()">📤 Eksporter data</button>
   <button onclick="exportPDF();closeMobMenu()">📄 Eksporter PDF</button>
+  <button onclick="openInviteModal();closeMobMenu()">👥 Inviter noen</button>
   <div class="divider"></div>
   <button onclick="signOut()" style="color:#f87171;">🚪 Logg ut</button>
+</div>
+
+<!-- ══ INVITASJONSMODAL ══ -->
+<div class="pdf-modal-overlay" id="inviteModalOverlay">
+  <div class="pdf-modal" style="max-width:400px">
+    <div class="pdf-modal-header">
+      <span style="font-size:1.2rem">👥</span>
+      <h2>Inviter til prosjektet</h2>
+      <button class="btn-cancel" style="padding:5px 12px" onclick="closeInviteModal()">✕</button>
+    </div>
+    <div class="pdf-modal-body" style="padding:20px">
+      <p style="font-size:0.83rem;color:#64748b;margin-bottom:14px;">Send en invitasjon til e-postadressen nedenfor. De får tilgang til å logge inn og se prosjektet.</p>
+      <input type="email" id="inviteEmailApp" placeholder="epost@eksempel.no"
+        style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;color:#f1f5f9;font-size:0.88rem;font-family:inherit;outline:none;margin-bottom:10px" />
+      <div id="inviteAppResult" style="font-size:0.8rem;padding:7px 10px;border-radius:6px;display:none;margin-bottom:8px"></div>
+    </div>
+    <div class="pdf-modal-footer">
+      <button class="btn-cancel" onclick="closeInviteModal()">Avbryt</button>
+      <button class="btn-primary" style="flex:0;padding:8px 24px" id="inviteAppBtn" onclick="sendAppInvite()">Send invitasjon</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══ VELG PLAN-SKJERM ══ -->
