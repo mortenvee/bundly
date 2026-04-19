@@ -3235,11 +3235,11 @@ async function sendAppInvite() {
 
   try {
     const { data: { session } } = await db.auth.getSession();
-    const userId = session?.user?.id;
-    const res = await fetch('/.netlify/functions/admin-user', {
+    const token = session?.access_token;
+    const res = await fetch('/.netlify/functions/invite-user', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-admin-secret': 'bundly_admin_2024' },
-      body: JSON.stringify({ action: 'invite', userId, email }),
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ email }),
     });
     const data = await res.json();
     if (res.ok) {
