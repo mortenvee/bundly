@@ -30,7 +30,7 @@ exports.handler = async (event) => {
     if (!userToken) return json(401, { error: 'Ikke innlogget' });
 
     const userRes  = await fetch(`${SB}/auth/v1/user`, {
-      headers: { 'Authorization': `Bearer ${userToken}`, 'apikey': process.env.SUPABASE_ANON_KEY },
+      headers: { 'Authorization': `Bearer ${userToken}`, 'apikey': KEY },
     });
     if (!userRes.ok) return json(401, { error: 'Ugyldig sesjon' });
     const userData = await userRes.json();
