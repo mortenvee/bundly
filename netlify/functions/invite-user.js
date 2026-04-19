@@ -54,10 +54,10 @@ exports.handler = async (event) => {
     if (!hasPlan && !inTrial) return json(403, { error: 'Du trenger en aktiv plan for å invitere brukere' });
 
     // Send invitasjon via Supabase Admin
-    const inviteRes = await fetch(`${SB}/auth/v1/admin/invite`, {
+    const inviteRes = await fetch(`${SB}/auth/v1/admin/users`, {
       method: 'POST',
       headers: HDR,
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, email_confirm: false }),
     });
 
     const inviteText = await inviteRes.text();
