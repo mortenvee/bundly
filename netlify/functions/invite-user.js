@@ -32,8 +32,10 @@ exports.handler = async (event) => {
     const userRes  = await fetch(`${SB}/auth/v1/user`, {
       headers: { 'Authorization': `Bearer ${userToken}`, 'apikey': KEY },
     });
-    if (!userRes.ok) return json(401, { error: 'Ugyldig sesjon' });
-    const userData = await userRes.json();
+    const userText = await userRes.text();
+    let userData = {};
+    try { userData = JSON.parse(userText); } catch(e) {}
+    if (!userRes.ok || !userData.id) return json(401, { error: 'Ugyldig sesjon' });
     const userId   = userData.id;
 
     // Sjekk at brukeren har aktiv plan eller trial
@@ -58,9 +60,12 @@ exports.handler = async (event) => {
       body: JSON.stringify({ email }),
     });
 
+    const inviteText = await inviteRes.text();
+    let inviteData = {};
+    try { inviteData = JSON.parse(inviteText); } catch(e) {}
+
     if (!inviteRes.ok) {
-      const err = await inviteRes.json();
-      return json(400, { error: err.message || 'Kunne ikke sende invitasjon' });
+      return json(400, { error: inviteData.message || inviteData.error || inviteText.slice(0,100) || 'Kunne ikke sende invitasjon' });
     }
 
     return json(200, { ok: true });
