@@ -120,11 +120,16 @@ exports.handler = async (event) => {
     // ── Slett bruker
     if (action === 'delete_user') {
       if (!userId) return json(400, { error: 'Mangler userId' });
-      // Slett subscriptions-rad først
+
+      // Slett alt relatert data først (foreign key-rekkefølge)
+      await fetch(`${SB}/rest/v1/app_state?user_id=eq.${userId}`, {
+        method: 'DELETE', headers: HDR,
+      });
       await fetch(`${SB}/rest/v1/subscriptions?user_id=eq.${userId}`, {
         method: 'DELETE', headers: HDR,
       });
-      // Slett auth-bruker
+
+      // Slett auth-bruker til slutt
       const delRes = await fetch(`${SB}/auth/v1/admin/users/${userId}`, {
         method: 'DELETE', headers: HDR,
       });
