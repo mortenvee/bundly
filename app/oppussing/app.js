@@ -2892,6 +2892,9 @@ const DB_ROW_ID     = 'oppussing';
 const supabaseReady = SUPABASE_URL !== 'DIN_SUPABASE_URL' && SUPABASE_KEY !== 'DIN_ANON_KEY';
 const db = supabaseReady ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+// Hvis brukeren er et teammedlem, bruk eierens user_id for data
+const teamOwnerId = sessionStorage.getItem('bundly_team_owner') || null;
+
 /* Statusindikator */
 function setDbStatus(status) {
   const el = document.getElementById('dbStatus');
@@ -2916,10 +2919,11 @@ function scheduleDbSave() {
 
 async function saveToDb() {
   if (!supabaseReady || !currentUser) { saveToLocalStorage(); return; }
+  const effectiveId = teamOwnerId || currentUser.id;
   const state = buildState();
   try {
     const { error } = await db.from(DB_TABLE).upsert({
-      user_id: currentUser.id,
+      user_id: effectiveId,
       data: state,
       updated_at: new Date().toISOString()
     });
@@ -2938,32 +2942,33 @@ async function loadFromDb() {
     setDbStatus('offline');
     return loadFromLocalStorage();
   }
+  const effectiveId = teamOwnerId || currentUser.id;
   try {
-    const { data, error } = await db.from(DB_TABLE).select('data').eq('user_id', currentUser.id).single();
+    const { data, error } = await db.from(DB_TABLE).select('data').eq('user_id', effectiveId).single();
     if (error && error.code !== 'PGRST116') throw error;
     if (data?.data) {
       applyState(data.data);
       saveToLocalStorage();
       return true;
     }
-    // Ingen data for denne brukeren → start tom (ikke last forrige brukers data)
     return false;
   } catch(e) {
     console.warn('DB-lasting feilet, faller tilbake til localStorage:', e);
     setDbStatus('error');
-    return loadFromLocalStorage(); // kun ved nettverksfeil
+    return loadFromLocalStorage();
   }
 }
 
 /* Sanntidssynkronisering — andre enheter ser endringer umiddelbart */
 function startRealtime() {
   if (!supabaseReady || !currentUser) return;
+  const effectiveId = teamOwnerId || currentUser.id;
   db.channel('app_state_changes')
     .on('postgres_changes', {
       event:  'UPDATE',
       schema: 'public',
       table:  DB_TABLE,
-      filter: `user_id=eq.${currentUser.id}`,
+      filter: `user_id=eq.${effectiveId}`,
     }, payload => {
       if (payload.new?.data) {
         applyState(payload.new.data);

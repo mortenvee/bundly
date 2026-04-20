@@ -474,6 +474,18 @@ async function getSubscription(userId) {
   } catch(e) { return null; }
 }
 
+// ── Sjekk om brukeren er invitert teammedlem — returnerer owner_id eller null
+async function checkTeamMembership(userId, email) {
+  try {
+    const { data } = await db
+      .from('team_members')
+      .select('owner_id')
+      .or(`member_id.eq.${userId},member_email.eq.${encodeURIComponent(email)}`)
+      .maybeSingle();
+    return data?.owner_id || null;
+  } catch(e) { return null; }
+}
+
 // ── Valgt planlegger (Starter-plan lagres i localStorage)
 function getChosenPlanner(userId) {
   return localStorage.getItem(`bundly_chosen_${userId}`) || null;
@@ -593,8 +605,13 @@ function showApp(user, sub) {
 
   document.getElementById('userEmailEl').textContent = user.email;
   const badge = document.getElementById('planBadgeEl');
-  badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
-  badge.className   = `plan-badge plan-${currentPlan}`;
+  if (sub?.isTeamMember) {
+    badge.textContent = '👥 Team';
+    badge.className   = 'plan-badge plan-team';
+  } else {
+    badge.textContent = currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1);
+    badge.className   = `plan-badge plan-${currentPlan}`;
+  }
 
   const chosenId = currentPlan === 'starter' ? getChosenPlanner(user.id) : null;
   const banner   = document.getElementById('upgradeBanner');
@@ -704,6 +721,19 @@ async function handleAuthUser(user) {
     };
     poll();
     return;
+  }
+
+  // ── Sjekk om brukeren er et invitert teammedlem
+  const ownerId = await checkTeamMembership(user.id, user.email);
+  if (ownerId) {
+    sessionStorage.setItem('bundly_team_owner', ownerId);
+    const ownerSub = await getSubscription(ownerId);
+    if (ownerSub && ownerSub.status === 'active') {
+      showApp(user, { ...ownerSub, isTeamMember: true });
+      return;
+    }
+  } else {
+    sessionStorage.removeItem('bundly_team_owner');
   }
 
   const sub     = await getSubscription(user.id);
