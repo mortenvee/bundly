@@ -80,7 +80,8 @@ exports.handler = async (event) => {
     try { linkData = JSON.parse(linkText); } catch(e) {}
 
     if (!linkRes.ok) {
-      return json(400, { error: linkData.message || linkData.error || 'Kunne ikke generere invitasjonslenke' });
+      console.error('generate_link error:', linkRes.status, linkText);
+      return json(400, { error: `Supabase (${linkRes.status}): ${linkData.message || linkData.error || linkData.msg || linkText || 'Ukjent feil'}` });
     }
 
     const inviteLink = linkData.action_link || linkData.properties?.action_link || 'https://bundly.no/app/';
