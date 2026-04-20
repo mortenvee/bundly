@@ -69,6 +69,21 @@ exports.handler = async (event) => {
       error: `Du har nådd grensen på ${maxMembers} medlemmer for ${plan}-planen`
     });
 
+    // Hvis brukeren allerede finnes (ubekreftet fra tidligere invitasjon), slett og start på nytt
+    const listRes  = await fetch(`${SB}/auth/v1/admin/users?page=1&per_page=1000`, { headers: HDR });
+    const listData = listRes.ok ? await listRes.json() : {};
+    const existing_user = (listData.users || []).find(u => u.email === email);
+    if (existing_user && !existing_user.email_confirmed_at) {
+      // Slett ubekreftet bruker så vi kan re-invitere
+      await fetch(`${SB}/auth/v1/admin/users/${existing_user.id}`, { method: 'DELETE', headers: HDR });
+      // Slett eventuell gammel team_members-rad
+      await fetch(`${SB}/rest/v1/team_members?member_email=eq.${encodeURIComponent(email)}&owner_id=eq.${userId}`, {
+        method: 'DELETE', headers: HDR,
+      });
+    } else if (existing_user && existing_user.email_confirmed_at) {
+      return json(400, { error: 'Denne e-postadressen er allerede registrert som bruker' });
+    }
+
     // Generer invitasjonslenke via Supabase
     const linkRes  = await fetch(`${SB}/auth/v1/admin/generate_link`, {
       method: 'POST',
