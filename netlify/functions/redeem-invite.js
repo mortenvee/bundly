@@ -82,19 +82,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({ member_id: memberId, status: 'active' }),
     });
 
-    // Logg inn brukeren og returner sesjon
-    const signInRes = await fetch(`${SB}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: { ...HDR, 'apikey': process.env.SUPABASE_ANON_KEY || KEY },
-      body: JSON.stringify({ email, password }),
-    });
-    const signInData = signInRes.ok ? await signInRes.json() : {};
-
-    return json(200, {
-      ok: true,
-      access_token:  signInData.access_token,
-      refresh_token: signInData.refresh_token,
-    });
+    // Returner ok — klienten logger inn selv med passord
+    return json(200, { ok: true });
 
   } catch (err) {
     console.error('redeem-invite error:', err);

@@ -457,13 +457,10 @@ async function doAuth() {
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'Ugyldig kode eller e-post');
 
-      // Logg inn med Supabase-sesjonen fra serveren
-      const { error: sessErr } = await db.auth.setSession({
-        access_token:  data.access_token,
-        refresh_token: data.refresh_token,
-      });
-      if (sessErr) throw sessErr;
+      // Koden er ok — logg inn direkte med Supabase
       btn.textContent = 'Aktiverer…';
+      const { error: signInErr } = await db.auth.signInWithPassword({ email, password });
+      if (signInErr) throw signInErr;
       return;
     }
 
