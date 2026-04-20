@@ -73,7 +73,7 @@ exports.handler = async (event) => {
     const linkRes  = await fetch(`${SB}/auth/v1/admin/generate_link`, {
       method: 'POST',
       headers: HDR,
-      body: JSON.stringify({ type: 'invite', email }),
+      body: JSON.stringify({ type: 'invite', email, options: { redirect_to: 'https://bundly.no/app/oppussing/' } }),
     });
     const linkText = await linkRes.text();
     let linkData = {};
@@ -98,19 +98,19 @@ exports.handler = async (event) => {
         to:      email,
         subject: 'Du er invitert til Bundly! 🏠',
         html: `
-          <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">
-            <div style="background:#6366f1;padding:32px;text-align:center">
-              <div style="font-size:2rem">🏠</div>
-              <h1 style="color:#fff;margin:12px 0 4px;font-size:1.4rem">Du er invitert til Bundly!</h1>
-              <p style="color:rgba(255,255,255,0.85);margin:0;font-size:0.9rem">Din smarte planlegger for boligprosjekter</p>
+          <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#0d1117;border-radius:12px;overflow:hidden;border:1px solid #1e2530">
+            <div style="background:#06080f;padding:32px;text-align:center;border-bottom:1px solid #1e2530">
+              <div style="font-size:2.2rem;margin-bottom:8px">🏠</div>
+              <h1 style="color:#fff;margin:0 0 6px;font-size:1.4rem;font-weight:700">Du er invitert til Bundly!</h1>
+              <p style="color:#6366f1;margin:0;font-size:0.88rem;font-weight:500">Din smarte planlegger for boligprosjekter</p>
             </div>
             <div style="padding:32px">
-              <p style="color:#374151;font-size:0.95rem;line-height:1.6">Hei! Du har blitt invitert til å bruke Bundly.</p>
-              <p style="color:#374151;font-size:0.95rem;line-height:1.6">Klikk på knappen nedenfor for å sette opp passordet ditt og komme i gang:</p>
-              <div style="text-align:center;margin:28px 0">
-                <a href="${inviteLink}" style="background:#6366f1;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem">Kom i gang →</a>
+              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7;margin-top:0">Hei! Du har blitt invitert til å bruke Bundly.</p>
+              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7">Klikk på knappen nedenfor for å sette opp passordet ditt og komme i gang:</p>
+              <div style="text-align:center;margin:32px 0">
+                <a href="${inviteLink}" style="background:#6366f1;color:#fff;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;display:inline-block">Kom i gang →</a>
               </div>
-              <p style="color:#94a3b8;font-size:0.8rem;text-align:center">Lenken er gyldig i 24 timer.</p>
+              <p style="color:#475569;font-size:0.8rem;text-align:center;margin-bottom:0">Lenken er gyldig i 24 timer.</p>
             </div>
           </div>`,
       }),
