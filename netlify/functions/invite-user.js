@@ -1,11 +1,13 @@
 // Bundly – Bruker-initiert invitasjon
-// Verifiserer Supabase JWT, sjekker plan, sender invite
+// Verifiserer JWT, sjekker plan-grenser, lagrer i team_members
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+const PLAN_LIMITS = { trial: 0, gratis: 0, starter: 0, familie: 4, team: 14 };
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS };
@@ -24,7 +26,7 @@ exports.handler = async (event) => {
     const { email } = JSON.parse(event.body || '{}');
     if (!email) return json(400, { error: 'Mangler e-postadresse' });
 
-    // Verifiser brukerens JWT-token
+    // Verifiser JWT
     const authHeader = event.headers['authorization'] || '';
     const userToken  = authHeader.replace('Bearer ', '');
     if (!userToken) return json(401, { error: 'Ikke innlogget' });
@@ -36,22 +38,36 @@ exports.handler = async (event) => {
     let userData = {};
     try { userData = JSON.parse(userText); } catch(e) {}
     if (!userRes.ok || !userData.id) return json(401, { error: 'Ugyldig sesjon' });
-    const userId   = userData.id;
+    const userId = userData.id;
 
-    // Sjekk at brukeren har aktiv plan eller trial
+    // Hent plan
     const subRes = await fetch(`${SB}/rest/v1/subscriptions?user_id=eq.${userId}&select=plan,status`, {
       headers: { ...HDR, 'Prefer': 'return=representation' },
     });
     const subs = await subRes.json();
     const sub  = subs?.[0];
 
-    // Tillat invitasjon hvis aktiv plan ELLER i trial (sjekk created_at)
-    const created  = new Date(userData.created_at);
-    const daysUsed = Math.floor((Date.now() - created) / 86400000);
-    const inTrial  = daysUsed < 7;
-    const hasPlan  = sub && sub.status === 'active' && sub.plan !== 'gratis';
+    const created    = new Date(userData.created_at);
+    const daysUsed   = Math.floor((Date.now() - created) / 86400000);
+    const inTrial    = daysUsed < 7;
+    const hasPlan    = sub && sub.status === 'active' && sub.plan !== 'gratis';
+    const plan       = hasPlan ? sub.plan : (inTrial ? 'trial' : 'gratis');
+    const maxMembers = PLAN_LIMITS[plan] ?? 0;
 
-    if (!hasPlan && !inTrial) return json(403, { error: 'Du trenger en aktiv plan for å invitere brukere' });
+    if (maxMembers === 0) return json(403, {
+      error: plan === 'trial' || plan === 'gratis' || plan === 'starter'
+        ? 'Invitasjoner krever Familie- eller Team-plan'
+        : 'Du har nådd grensen for antall medlemmer'
+    });
+
+    // Sjekk antall eksisterende medlemmer
+    const existRes = await fetch(`${SB}/rest/v1/team_members?owner_id=eq.${userId}&select=id`, {
+      headers: { ...HDR, 'Prefer': 'return=representation' },
+    });
+    const existing = existRes.ok ? await existRes.json() : [];
+    if (existing.length >= maxMembers) return json(403, {
+      error: `Du har nådd grensen på ${maxMembers} medlemmer for ${plan}-planen`
+    });
 
     // Send invitasjon via Supabase Admin
     const inviteRes = await fetch(`${SB}/auth/v1/admin/users`, {
@@ -65,8 +81,20 @@ exports.handler = async (event) => {
     try { inviteData = JSON.parse(inviteText); } catch(e) {}
 
     if (!inviteRes.ok) {
-      return json(400, { error: inviteData.message || inviteData.error || inviteText.slice(0,100) || 'Kunne ikke sende invitasjon' });
+      return json(400, { error: inviteData.message || inviteData.error || 'Kunne ikke sende invitasjon' });
     }
+
+    // Lagre i team_members
+    await fetch(`${SB}/rest/v1/team_members`, {
+      method: 'POST',
+      headers: { ...HDR, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        owner_id:     userId,
+        member_email: email,
+        member_id:    inviteData.id || null,
+        status:       'invited',
+      }),
+    });
 
     return json(200, { ok: true });
 

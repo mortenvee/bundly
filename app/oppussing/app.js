@@ -18,6 +18,7 @@ function showTab(name) {
   if (name === 'decisions') renderDecisions();
   if (name === 'progress')  renderProgressPhotos();
   if (name === 'docs')      { renderDocuments(); initDocDropzone(); }
+  if (name === 'team')      renderTeam();
 }
 
 /* ════════════════════════════════════
@@ -3204,6 +3205,98 @@ document.addEventListener('click', e => {
 async function signOut() {
   await db.auth?.signOut();
   window.location.href = '/';
+}
+
+/* ════════════════════════════════════
+   TEAM-FANE
+════════════════════════════════════ */
+async function renderTeam() {
+  const listEl    = document.getElementById('teamMembersList');
+  const infoEl    = document.getElementById('teamLicenseInfo');
+  const barEl     = document.getElementById('teamLicenseBar');
+  const labelEl   = document.getElementById('teamLicenseLabel');
+  const pctEl     = document.getElementById('teamLicensePct');
+  const fillEl    = document.getElementById('teamLicenseFill');
+  const inviteBtn = document.getElementById('teamInviteBtn');
+
+  listEl.innerHTML = '<div style="color:#64748b;font-size:0.85rem;padding:20px 0">Laster…</div>';
+
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const token = session?.access_token;
+
+    const res  = await fetch('/.netlify/functions/get-team', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Kunne ikke hente team');
+
+    const { members, plan, maxMembers, used } = data;
+    const planName = { trial:'Trial', gratis:'Gratis', starter:'Starter', familie:'Familie', team:'Team' }[plan] || plan;
+
+    // Lisensinfo
+    if (maxMembers === 0) {
+      infoEl.textContent = `${planName}-plan · Invitasjoner krever Familie- eller Team-plan`;
+      barEl.style.display = 'none';
+      inviteBtn.style.display = 'none';
+    } else {
+      infoEl.textContent = `${planName}-plan · ${used} av ${maxMembers} medlemsplasser brukt`;
+      barEl.style.display = 'block';
+      labelEl.textContent = `${used} / ${maxMembers} medlemmer`;
+      pctEl.textContent   = `${Math.round(used / maxMembers * 100)}%`;
+      fillEl.style.width  = `${Math.round(used / maxMembers * 100)}%`;
+      fillEl.style.background = used >= maxMembers ? '#ef4444' : '#6366f1';
+      inviteBtn.style.display = used >= maxMembers ? 'none' : 'inline-flex';
+    }
+
+    // Medlemsliste
+    if (!members.length) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:40px 20px;color:#475569">
+          <div style="font-size:2rem;margin-bottom:12px">👤</div>
+          <div style="font-size:0.9rem">Ingen medlemmer ennå — inviter noen!</div>
+        </div>`;
+      return;
+    }
+
+    listEl.innerHTML = members.map(m => `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:10px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:#fff;flex-shrink:0">
+          ${(m.member_email || '?').slice(0,2).toUpperCase()}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.88rem;color:#f1f5f9;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.member_email}</div>
+          <div style="font-size:0.75rem;color:#64748b;margin-top:2px">
+            ${m.status === 'active' ? '🟢 Aktiv' : '🟡 Invitasjon sendt'}
+            · ${new Date(m.invited_at).toLocaleDateString('nb-NO')}
+          </div>
+        </div>
+        <button onclick="removeMember('${m.id}')"
+          style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.2);border-radius:7px;padding:6px 12px;font-size:0.78rem;cursor:pointer;font-family:inherit;white-space:nowrap">
+          🗑 Fjern
+        </button>
+      </div>`).join('');
+
+  } catch(e) {
+    listEl.innerHTML = `<div style="color:#f87171;font-size:0.85rem">${e.message}</div>`;
+  }
+}
+
+async function removeMember(memberId) {
+  if (!confirm('Fjerne dette medlemmet fra teamet?')) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    const res = await fetch('/.netlify/functions/remove-member', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ memberId }),
+    });
+    if (res.ok) renderTeam();
+    else {
+      const d = await res.json();
+      alert('Feil: ' + (d.error || 'Ukjent feil'));
+    }
+  } catch(e) { alert('Noe gikk galt'); }
 }
 
 /* ════════════════════════════════════

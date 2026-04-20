@@ -206,6 +206,7 @@
   <button class="tab-btn" onclick="showTab('decisions')">📝 Beslutninger</button>
   <button class="tab-btn" onclick="showTab('progress')">📸 Fremdrift</button>
   <button class="tab-btn" onclick="showTab('docs')">📁 Arkiv</button>
+  <button class="tab-btn" onclick="showTab('team')">👥 Team</button>
 </nav>
 
 <!-- ══ DASHBOARD ══ -->
@@ -710,6 +711,37 @@
 
 </div>
 </div><!-- /tab-docs -->
+
+<!-- ══ TEAM ══ -->
+<div class="tab-content" id="tab-team">
+  <div style="max-width:640px;margin:0 auto;padding:24px 0">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#f1f5f9;margin-bottom:4px">👥 Team</h2>
+        <div id="teamLicenseInfo" style="font-size:0.82rem;color:#64748b"></div>
+      </div>
+      <button class="btn-primary" onclick="openInviteModal()" id="teamInviteBtn"
+        style="padding:8px 18px;font-size:0.85rem">+ Inviter medlem</button>
+    </div>
+
+    <!-- Lisens-bar -->
+    <div id="teamLicenseBar" style="margin-bottom:24px;display:none">
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:#64748b;margin-bottom:6px">
+        <span id="teamLicenseLabel"></span>
+        <span id="teamLicensePct"></span>
+      </div>
+      <div style="background:rgba(255,255,255,0.08);border-radius:20px;height:6px">
+        <div id="teamLicenseFill" style="height:6px;border-radius:20px;background:#6366f1;transition:width .3s"></div>
+      </div>
+    </div>
+
+    <!-- Medlemsliste -->
+    <div id="teamMembersList"></div>
+
+  </div>
+</div><!-- /tab-team -->
 
 <!-- ══ DOKUMENT UPLOAD MODAL ══ -->
 <div class="doc-upload-modal-overlay" id="docUploadOverlay">
