@@ -280,12 +280,18 @@
     </div>
 
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Logg inn</button>
-      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Registrer</button>
+      <button class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">Logg inn</button>
+      <button class="auth-tab"        id="tabSignup" onclick="switchTab('signup')">Registrer</button>
+      <button class="auth-tab"        id="tabInvite" onclick="switchTab('invite')">🎟 Kode</button>
     </div>
 
     <input class="auth-input" type="email" id="authEmail" placeholder="E-postadresse" autocomplete="email"
       oninput="clearErr()" onkeydown="if(event.key==='Enter')doAuth()">
+
+    <!-- Kun synlig i invite-modus -->
+    <input class="auth-input" type="text" id="authCode" placeholder="Invitasjonskode (f.eks. AB3X9K)"
+      autocomplete="off" oninput="clearErr()" onkeydown="if(event.key==='Enter')doAuth()"
+      style="display:none;text-transform:uppercase;letter-spacing:.15em;font-weight:700;">
 
     <div class="pw-wrap">
       <input class="auth-input" type="password" id="authPassword" placeholder="Passord" autocomplete="current-password"
@@ -408,11 +414,14 @@ const PLANNERS = [
 // ── Auth UI
 function switchTab(mode) {
   authMode = mode;
-  const isLogin = mode === 'login';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
-  document.getElementById('authBtn').textContent      = isLogin ? 'Logg inn' : 'Opprett konto';
-  document.getElementById('authSubtitle').textContent = isLogin ? 'Logg inn for å fortsette' : 'Opprett din konto';
+  document.getElementById('tabLogin').classList.toggle('active',  mode === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+  document.getElementById('tabInvite').classList.toggle('active', mode === 'invite');
+  document.getElementById('authCode').style.display = mode === 'invite' ? 'block' : 'none';
+  const labels = { login: 'Logg inn for å fortsette', signup: 'Opprett din konto', invite: 'Aktiver kontoen din' };
+  const btns   = { login: 'Logg inn', signup: 'Opprett konto', invite: 'Aktiver konto' };
+  document.getElementById('authSubtitle').textContent = labels[mode];
+  document.getElementById('authBtn').textContent      = btns[mode];
   clearErr();
 }
 
@@ -429,12 +438,36 @@ function togglePw() {
 async function doAuth() {
   const email    = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
+  const code     = document.getElementById('authCode').value.trim();
   const btn      = document.getElementById('authBtn');
+
   if (!email || !password) { showErr('Fyll inn e-post og passord.'); return; }
+  if (authMode === 'invite' && !code) { showErr('Fyll inn invitasjonskoden.'); return; }
 
   btn.textContent = 'Venter…'; btn.disabled = true;
 
   try {
+    // ── Invitasjonskode-flyt
+    if (authMode === 'invite') {
+      const res  = await fetch('/.netlify/functions/redeem-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, password }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Ugyldig kode eller e-post');
+
+      // Logg inn med Supabase-sesjonen fra serveren
+      const { error: sessErr } = await db.auth.setSession({
+        access_token:  data.access_token,
+        refresh_token: data.refresh_token,
+      });
+      if (sessErr) throw sessErr;
+      btn.textContent = 'Aktiverer…';
+      return;
+    }
+
+    // ── Vanlig logg inn / registrer
     let result;
     if (authMode === 'login') {
       result = await db.auth.signInWithPassword({ email, password });
@@ -454,8 +487,8 @@ async function doAuth() {
               : err.message?.includes('already registered') ? 'E-posten er allerede registrert.'
               : err.message || 'Noe gikk galt, prøv igjen.';
     showErr(msg);
-    btn.textContent = authMode === 'login' ? 'Logg inn' : 'Opprett konto';
-    btn.disabled = false;
+    const labels = { login: 'Logg inn', signup: 'Opprett konto', invite: 'Aktiver konto' };
+    btn.textContent = labels[authMode]; btn.disabled = false;
   }
 }
 

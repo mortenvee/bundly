@@ -1,5 +1,5 @@
 // Bundly – Bruker-initiert invitasjon
-// Verifiserer JWT, sjekker plan-grenser, lagrer i team_members
+// Verifiserer JWT, sjekker plan-grenser, lagrer i team_members med invitasjonskode
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -8,6 +8,13 @@ const CORS = {
 };
 
 const PLAN_LIMITS = { trial: 0, gratis: 0, starter: 0, familie: 4, team: 14 };
+
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // unngår 0/O og 1/I
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS };
@@ -69,40 +76,32 @@ exports.handler = async (event) => {
       error: `Du har nådd grensen på ${maxMembers} medlemmer for ${plan}-planen`
     });
 
-    // Hvis brukeren allerede finnes (ubekreftet fra tidligere invitasjon), slett og start på nytt
-    const listRes  = await fetch(`${SB}/auth/v1/admin/users?page=1&per_page=1000`, { headers: HDR });
-    const listData = listRes.ok ? await listRes.json() : {};
-    const existing_user = (listData.users || []).find(u => u.email === email);
-    if (existing_user && !existing_user.email_confirmed_at) {
-      // Slett ubekreftet bruker så vi kan re-invitere
-      await fetch(`${SB}/auth/v1/admin/users/${existing_user.id}`, { method: 'DELETE', headers: HDR });
-      // Slett eventuell gammel team_members-rad
-      await fetch(`${SB}/rest/v1/team_members?member_email=eq.${encodeURIComponent(email)}&owner_id=eq.${userId}`, {
-        method: 'DELETE', headers: HDR,
-      });
-    } else if (existing_user && existing_user.email_confirmed_at) {
-      return json(400, { error: 'Denne e-postadressen er allerede registrert som bruker' });
-    }
-
-    // Generer invitasjonslenke via Supabase
-    const linkRes  = await fetch(`${SB}/auth/v1/admin/generate_link`, {
-      method: 'POST',
-      headers: HDR,
-      body: JSON.stringify({ type: 'invite', email, redirect_to: 'https://bundly.no/app/oppussing/' }),
+    // Slett eventuell gammel invitasjon for samme e-post
+    await fetch(`${SB}/rest/v1/team_members?member_email=eq.${encodeURIComponent(email)}&owner_id=eq.${userId}&status=eq.invited`, {
+      method: 'DELETE', headers: HDR,
     });
-    const linkText = await linkRes.text();
-    let linkData = {};
-    try { linkData = JSON.parse(linkText); } catch(e) {}
 
-    if (!linkRes.ok) {
-      console.error('generate_link error:', linkRes.status, linkText);
-      return json(400, { error: `Supabase (${linkRes.status}): ${linkData.message || linkData.error || linkData.msg || linkText || 'Ukjent feil'}` });
+    // Generer invitasjonskode
+    const inviteCode = generateCode();
+
+    // Lagre i team_members
+    const insertRes = await fetch(`${SB}/rest/v1/team_members`, {
+      method: 'POST',
+      headers: { ...HDR, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        owner_id:     userId,
+        member_email: email,
+        member_id:    null,
+        status:       'invited',
+        invite_code:  inviteCode,
+      }),
+    });
+    if (!insertRes.ok) {
+      const errText = await insertRes.text();
+      return json(400, { error: 'Kunne ikke opprette invitasjon: ' + errText });
     }
 
-    const inviteLink = linkData.action_link || linkData.properties?.action_link || 'https://bundly.no/app/';
-    const memberId   = linkData.id || null;
-
-    // Send e-post via Resend
+    // Send e-post med koden via Resend
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -112,7 +111,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         from:    'Bundly <hei@bundly.no>',
         to:      email,
-        subject: 'Du er invitert til Bundly! 🏠',
+        subject: 'Din invitasjonskode til Bundly 🏠',
         html: `
           <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#0d1117;border-radius:12px;overflow:hidden;border:1px solid #1e2530">
             <div style="background:#06080f;padding:32px;text-align:center;border-bottom:1px solid #1e2530">
@@ -122,25 +121,19 @@ exports.handler = async (event) => {
             </div>
             <div style="padding:32px">
               <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7;margin-top:0">Hei! Du har blitt invitert til å bruke Bundly.</p>
-              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7">Klikk på knappen nedenfor for å sette opp passordet ditt og komme i gang:</p>
+              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7">Bruk invitasjonskoden nedenfor for å opprette kontoen din:</p>
               <div style="text-align:center;margin:32px 0">
-                <a href="${inviteLink}" style="background:#6366f1;color:#fff;padding:14px 36px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem;display:inline-block">Kom i gang →</a>
+                <div style="background:#1e2530;border:2px dashed #6366f1;border-radius:12px;padding:24px;display:inline-block">
+                  <div style="color:#94a3b8;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Din invitasjonskode</div>
+                  <div style="color:#fff;font-size:2.2rem;font-weight:800;letter-spacing:.3em;font-variant-numeric:tabular-nums">${inviteCode}</div>
+                </div>
               </div>
-              <p style="color:#475569;font-size:0.8rem;text-align:center;margin-bottom:0">Lenken er gyldig i 24 timer.</p>
+              <p style="color:#cbd5e1;font-size:0.9rem;line-height:1.7;text-align:center">
+                Gå til <a href="https://bundly.no/app/" style="color:#6366f1">bundly.no/app</a> og velg <strong style="color:#fff">«Invitasjonskode»</strong> for å aktivere kontoen.
+              </p>
+              <p style="color:#475569;font-size:0.8rem;text-align:center;margin-top:24px;margin-bottom:0">Koden utløper ikke — ta den i bruk når det passer deg.</p>
             </div>
           </div>`,
-      }),
-    });
-
-    // Lagre i team_members
-    await fetch(`${SB}/rest/v1/team_members`, {
-      method: 'POST',
-      headers: { ...HDR, 'Prefer': 'return=minimal' },
-      body: JSON.stringify({
-        owner_id:     userId,
-        member_email: email,
-        member_id:    memberId,
-        status:       'invited',
       }),
     });
 
