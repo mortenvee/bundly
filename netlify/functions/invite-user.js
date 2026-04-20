@@ -69,20 +69,52 @@ exports.handler = async (event) => {
       error: `Du har nådd grensen på ${maxMembers} medlemmer for ${plan}-planen`
     });
 
-    // Send invitasjon via Supabase Admin
-    const inviteRes = await fetch(`${SB}/auth/v1/admin/users`, {
+    // Generer invitasjonslenke via Supabase
+    const linkRes  = await fetch(`${SB}/auth/v1/admin/generate_link`, {
       method: 'POST',
       headers: HDR,
-      body: JSON.stringify({ email, email_confirm: false }),
+      body: JSON.stringify({ type: 'invite', email }),
     });
+    const linkText = await linkRes.text();
+    let linkData = {};
+    try { linkData = JSON.parse(linkText); } catch(e) {}
 
-    const inviteText = await inviteRes.text();
-    let inviteData = {};
-    try { inviteData = JSON.parse(inviteText); } catch(e) {}
-
-    if (!inviteRes.ok) {
-      return json(400, { error: inviteData.message || inviteData.error || 'Kunne ikke sende invitasjon' });
+    if (!linkRes.ok) {
+      return json(400, { error: linkData.message || linkData.error || 'Kunne ikke generere invitasjonslenke' });
     }
+
+    const inviteLink = linkData.action_link || linkData.properties?.action_link || 'https://bundly.no/app/';
+    const memberId   = linkData.id || null;
+
+    // Send e-post via Resend
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from:    'Bundly <hei@bundly.no>',
+        to:      email,
+        subject: 'Du er invitert til Bundly! 🏠',
+        html: `
+          <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0">
+            <div style="background:#6366f1;padding:32px;text-align:center">
+              <div style="font-size:2rem">🏠</div>
+              <h1 style="color:#fff;margin:12px 0 4px;font-size:1.4rem">Du er invitert til Bundly!</h1>
+              <p style="color:rgba(255,255,255,0.85);margin:0;font-size:0.9rem">Din smarte planlegger for boligprosjekter</p>
+            </div>
+            <div style="padding:32px">
+              <p style="color:#374151;font-size:0.95rem;line-height:1.6">Hei! Du har blitt invitert til å bruke Bundly.</p>
+              <p style="color:#374151;font-size:0.95rem;line-height:1.6">Klikk på knappen nedenfor for å sette opp passordet ditt og komme i gang:</p>
+              <div style="text-align:center;margin:28px 0">
+                <a href="${inviteLink}" style="background:#6366f1;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem">Kom i gang →</a>
+              </div>
+              <p style="color:#94a3b8;font-size:0.8rem;text-align:center">Lenken er gyldig i 24 timer.</p>
+            </div>
+          </div>`,
+      }),
+    });
 
     // Lagre i team_members
     await fetch(`${SB}/rest/v1/team_members`, {
@@ -91,7 +123,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         owner_id:     userId,
         member_email: email,
-        member_id:    inviteData.id || null,
+        member_id:    memberId,
         status:       'invited',
       }),
     });
