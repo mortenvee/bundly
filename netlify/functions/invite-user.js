@@ -73,7 +73,7 @@ exports.handler = async (event) => {
     const linkRes  = await fetch(`${SB}/auth/v1/admin/generate_link`, {
       method: 'POST',
       headers: HDR,
-      body: JSON.stringify({ type: 'invite', email, options: { redirect_to: 'https://bundly.no/app/oppussing/' } }),
+      body: JSON.stringify({ type: 'invite', email, redirect_to: 'https://bundly.no/app/oppussing/' }),
     });
     const linkText = await linkRes.text();
     let linkData = {};
