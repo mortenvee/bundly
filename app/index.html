@@ -766,11 +766,14 @@ async function handleAuthUser(user) {
   const ownerId = await checkTeamMembership(user.id, user.email);
   if (ownerId) {
     sessionStorage.setItem('bundly_team_owner', ownerId);
+    // Hent eierens plan, men invitasjonen i seg selv er autorisasjon —
+    // uansett om eieren er på trial eller betalt plan gis tilgang
     const ownerSub = await getSubscription(ownerId);
-    if (ownerSub && ownerSub.status === 'active') {
-      showApp(user, { ...ownerSub, isTeamMember: true });
-      return;
-    }
+    const memberPlan = (ownerSub?.status === 'active' && ownerSub?.plan !== 'gratis')
+      ? ownerSub.plan
+      : 'familie'; // fallback hvis eier er på trial
+    showApp(user, { plan: memberPlan, status: 'active', isTeamMember: true });
+    return;
   } else {
     sessionStorage.removeItem('bundly_team_owner');
   }
