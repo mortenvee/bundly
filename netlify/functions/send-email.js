@@ -7,7 +7,7 @@ const CORS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const FROM = 'Bundly <onboarding@resend.dev>'; // bytt til hei@bundly.no når domenet er verifisert i Resend
+const FROM = 'Bundly <hei@bundly.no>';
 
 const templates = {
   welcome: (data) => ({
