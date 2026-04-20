@@ -101,6 +101,9 @@ exports.handler = async (event) => {
       return json(400, { error: 'Kunne ikke opprette invitasjon: ' + errText });
     }
 
+    // Lag en pen visningsnavn for eier (bruk del før @ i e-posten)
+    const ownerName = userData.email?.split('@')[0] || userData.email || 'en annen bruker';
+
     // Send e-post med koden via Resend
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -111,7 +114,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         from:    'Bundly <hei@bundly.no>',
         to:      email,
-        subject: 'Din invitasjonskode til Bundly 🏠',
+        subject: `${ownerName} har invitert deg til Bundly 🏠`,
         html: `
           <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#0d1117;border-radius:12px;overflow:hidden;border:1px solid #1e2530">
             <div style="background:#06080f;padding:32px;text-align:center;border-bottom:1px solid #1e2530">
@@ -120,7 +123,10 @@ exports.handler = async (event) => {
               <p style="color:#6366f1;margin:0;font-size:0.88rem;font-weight:500">Din smarte planlegger for boligprosjekter</p>
             </div>
             <div style="padding:32px">
-              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7;margin-top:0">Hei! Du har blitt invitert til å bruke Bundly.</p>
+              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7;margin-top:0">
+                Hei! <strong style="color:#fff">${userData.email}</strong> har invitert deg til sitt team på Bundly.<br>
+                Du får tilgang til deres prosjekter — ingen betaling nødvendig.
+              </p>
               <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7">Bruk invitasjonskoden nedenfor for å opprette kontoen din:</p>
               <div style="text-align:center;margin:32px 0">
                 <div style="background:#1e2530;border:2px dashed #6366f1;border-radius:12px;padding:24px;display:inline-block">
