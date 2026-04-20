@@ -54,24 +54,29 @@ exports.handler = async (event) => {
     // Hvis brukeren allerede finnes, hent eksisterende ID
     let memberId = createData.id;
     if (!createRes.ok) {
-      if (createData.message?.includes('already') || createData.code === 'email_exists') {
+      const errMsg = (createData.message || createData.msg || createData.error || createText || '').toLowerCase();
+      const looksExisting = errMsg.includes('already') || errMsg.includes('registered') || errMsg.includes('exists') || errMsg.includes('duplicate') || createData.code === 'email_exists';
+
+      if (looksExisting) {
         // Finn eksisterende bruker
         const listRes  = await fetch(`${SB}/auth/v1/admin/users?page=1&per_page=1000`, { headers: HDR });
         const listData = listRes.ok ? await listRes.json() : {};
         const existing = (listData.users || []).find(u => u.email === email);
         if (existing) {
           memberId = existing.id;
-          // Oppdater passordet
+          // Oppdater passordet + bekreft e-post
           await fetch(`${SB}/auth/v1/admin/users/${memberId}`, {
             method: 'PUT',
             headers: HDR,
-            body: JSON.stringify({ password }),
+            body: JSON.stringify({ password, email_confirm: true }),
           });
         } else {
-          return json(400, { error: createData.message || 'Kunne ikke opprette bruker' });
+          console.error('User create failed + no match:', createRes.status, createText);
+          return json(400, { error: `Supabase (${createRes.status}): ${errMsg || 'ukjent feil'}` });
         }
       } else {
-        return json(400, { error: createData.message || 'Kunne ikke opprette bruker' });
+        console.error('User create failed:', createRes.status, createText);
+        return json(400, { error: `Supabase (${createRes.status}): ${createData.message || createData.msg || createData.error || createText || 'ukjent feil'}` });
       }
     }
 
