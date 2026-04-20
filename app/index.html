@@ -507,12 +507,21 @@ async function getSubscription(userId) {
 // ── Sjekk om brukeren er invitert teammedlem — returnerer owner_id eller null
 async function checkTeamMembership(userId, email) {
   try {
-    const { data } = await db
+    // Prøv først med member_id (etter aktivering)
+    const { data: byId } = await db
       .from('team_members')
       .select('owner_id')
-      .or(`member_id.eq.${userId},member_email.eq.${encodeURIComponent(email)}`)
+      .eq('member_id', userId)
       .maybeSingle();
-    return data?.owner_id || null;
+    if (byId?.owner_id) return byId.owner_id;
+
+    // Fallback: match på e-post (før member_id er satt)
+    const { data: byEmail } = await db
+      .from('team_members')
+      .select('owner_id')
+      .eq('member_email', email)
+      .maybeSingle();
+    return byEmail?.owner_id || null;
   } catch(e) { return null; }
 }
 
