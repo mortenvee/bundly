@@ -36,27 +36,26 @@ exports.handler = async (event) => {
 
     // Slå opp i team_members med service key (bypasser RLS)
     const res = await fetch(
-      `${SB}/rest/v1/team_members?select=owner_id&or=(member_id.eq.${userId},member_email.eq.${encodeURIComponent(email)})&limit=1`,
+      `${SB}/rest/v1/team_members?select=owner_id,owner_email&or=(member_id.eq.${userId},member_email.eq.${encodeURIComponent(email)})&limit=1`,
       { headers: { ...HDR, 'Prefer': 'return=representation' } }
     );
     const rows = res.ok ? await res.json() : [];
-    const ownerId = rows[0]?.owner_id || null;
+    const row  = rows[0];
+    if (!row?.owner_id) return json(200, { isMember: false });
 
-    if (!ownerId) return json(200, { isMember: false });
+    const ownerId    = row.owner_id;
+    const ownerEmail = row.owner_email || '';
 
-    // Hent eierens plan og e-post
-    const [subRes, ownerRes] = await Promise.all([
-      fetch(`${SB}/rest/v1/subscriptions?user_id=eq.${ownerId}&select=plan,status&limit=1`,
-        { headers: { ...HDR, 'Prefer': 'return=representation' } }),
-      fetch(`${SB}/auth/v1/admin/users/${ownerId}`, { headers: HDR }),
-    ]);
-    const subs      = subRes.ok  ? await subRes.json()  : [];
-    const ownerData = ownerRes.ok ? await ownerRes.json() : {};
-    const sub       = subs[0];
-    const plan      = (sub?.status === 'active' && sub?.plan !== 'gratis') ? sub.plan : 'familie';
-    const ownerEmail = ownerData.email || '';
+    // Hent eierens plan
+    const subRes = await fetch(
+      `${SB}/rest/v1/subscriptions?user_id=eq.${ownerId}&select=plan,status&limit=1`,
+      { headers: { ...HDR, 'Prefer': 'return=representation' } }
+    );
+    const subs = subRes.ok ? await subRes.json() : [];
+    const sub  = subs[0];
+    const plan = (sub?.status === 'active' && sub?.plan !== 'gratis') ? sub.plan : 'familie';
 
-    return json(200, { isMember: true, ownerId, plan, ownerEmail });
+    return json(200, { isMember: true, ownerId, ownerEmail, plan });
 
   } catch (err) {
     console.error('check-membership error:', err);

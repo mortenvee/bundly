@@ -90,6 +90,7 @@ exports.handler = async (event) => {
       headers: { ...HDR, 'Prefer': 'return=minimal' },
       body: JSON.stringify({
         owner_id:     userId,
+        owner_email:  userData.email,
         member_email: email,
         member_id:    null,
         status:       'invited',
