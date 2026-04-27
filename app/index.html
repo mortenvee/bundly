@@ -504,24 +504,17 @@ async function getSubscription(userId) {
   } catch(e) { return null; }
 }
 
-// ── Sjekk om brukeren er invitert teammedlem — returnerer owner_id eller null
-async function checkTeamMembership(userId, email) {
+// ── Sjekk om brukeren er invitert teammedlem via server (bypasser RLS)
+async function checkTeamMembership() {
   try {
-    // Prøv først med member_id (etter aktivering)
-    const { data: byId } = await db
-      .from('team_members')
-      .select('owner_id')
-      .eq('member_id', userId)
-      .maybeSingle();
-    if (byId?.owner_id) return byId.owner_id;
+    const { data: { session } } = await db.auth.getSession();
+    if (!session?.access_token) return null;
 
-    // Fallback: match på e-post (før member_id er satt)
-    const { data: byEmail } = await db
-      .from('team_members')
-      .select('owner_id')
-      .eq('member_email', email)
-      .maybeSingle();
-    return byEmail?.owner_id || null;
+    const res  = await fetch('/.netlify/functions/check-membership', {
+      headers: { 'Authorization': `Bearer ${session.access_token}` },
+    });
+    const data = res.ok ? await res.json() : {};
+    return data.isMember ? { ownerId: data.ownerId, plan: data.plan } : null;
   } catch(e) { return null; }
 }
 
@@ -762,17 +755,11 @@ async function handleAuthUser(user) {
     return;
   }
 
-  // ── Sjekk om brukeren er et invitert teammedlem
-  const ownerId = await checkTeamMembership(user.id, user.email);
-  if (ownerId) {
-    sessionStorage.setItem('bundly_team_owner', ownerId);
-    // Hent eierens plan, men invitasjonen i seg selv er autorisasjon —
-    // uansett om eieren er på trial eller betalt plan gis tilgang
-    const ownerSub = await getSubscription(ownerId);
-    const memberPlan = (ownerSub?.status === 'active' && ownerSub?.plan !== 'gratis')
-      ? ownerSub.plan
-      : 'familie'; // fallback hvis eier er på trial
-    showApp(user, { plan: memberPlan, status: 'active', isTeamMember: true });
+  // ── Sjekk om brukeren er et invitert teammedlem (via server med service key)
+  const membership = await checkTeamMembership();
+  if (membership) {
+    sessionStorage.setItem('bundly_team_owner', membership.ownerId);
+    showApp(user, { plan: membership.plan, status: 'active', isTeamMember: true });
     return;
   } else {
     sessionStorage.removeItem('bundly_team_owner');
