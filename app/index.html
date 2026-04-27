@@ -758,11 +758,13 @@ async function handleAuthUser(user) {
   // ── Sjekk om brukeren er et invitert teammedlem (via server med service key)
   const membership = await checkTeamMembership();
   if (membership) {
-    sessionStorage.setItem('bundly_team_owner', membership.ownerId);
+    sessionStorage.setItem('bundly_team_owner',       membership.ownerId);
+    sessionStorage.setItem('bundly_team_owner_email', membership.ownerEmail || '');
     showApp(user, { plan: membership.plan, status: 'active', isTeamMember: true });
     return;
   } else {
     sessionStorage.removeItem('bundly_team_owner');
+    sessionStorage.removeItem('bundly_team_owner_email');
   }
 
   const sub     = await getSubscription(user.id);

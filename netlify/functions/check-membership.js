@@ -44,16 +44,19 @@ exports.handler = async (event) => {
 
     if (!ownerId) return json(200, { isMember: false });
 
-    // Hent eierens plan
-    const subRes = await fetch(
-      `${SB}/rest/v1/subscriptions?user_id=eq.${ownerId}&select=plan,status&limit=1`,
-      { headers: { ...HDR, 'Prefer': 'return=representation' } }
-    );
-    const subs = subRes.ok ? await subRes.json() : [];
-    const sub  = subs[0];
-    const plan = (sub?.status === 'active' && sub?.plan !== 'gratis') ? sub.plan : 'familie';
+    // Hent eierens plan og e-post
+    const [subRes, ownerRes] = await Promise.all([
+      fetch(`${SB}/rest/v1/subscriptions?user_id=eq.${ownerId}&select=plan,status&limit=1`,
+        { headers: { ...HDR, 'Prefer': 'return=representation' } }),
+      fetch(`${SB}/auth/v1/admin/users/${ownerId}`, { headers: HDR }),
+    ]);
+    const subs      = subRes.ok  ? await subRes.json()  : [];
+    const ownerData = ownerRes.ok ? await ownerRes.json() : {};
+    const sub       = subs[0];
+    const plan      = (sub?.status === 'active' && sub?.plan !== 'gratis') ? sub.plan : 'familie';
+    const ownerEmail = ownerData.email || '';
 
-    return json(200, { isMember: true, ownerId, plan });
+    return json(200, { isMember: true, ownerId, plan, ownerEmail });
 
   } catch (err) {
     console.error('check-membership error:', err);
