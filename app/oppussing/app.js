@@ -3436,7 +3436,9 @@ async function handleSession(user) {
   const emailEl = document.getElementById('userEmail');
   if (emailEl) emailEl.textContent = currentUser.email;
 
-  const hasPlan = await checkSubscription(currentUser.id);
+  // Teammedlemmer har alltid tilgang — de bruker eierens data og plan
+  const isTeamMember = !!teamOwnerId;
+  const hasPlan = isTeamMember || await checkSubscription(currentUser.id);
 
   document.getElementById('lockScreen').style.display = 'none';
 
