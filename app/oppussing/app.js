@@ -2918,13 +2918,15 @@ function scheduleDbSave() {
   setDbStatus('saving');
 }
 
-let lastOwnSaveStamp = null;
+const recentOwnSaves = new Set();
 
 async function saveToDb() {
   if (!supabaseReady || !currentUser) { saveToLocalStorage(); return; }
   const effectiveId = teamOwnerId || currentUser.id;
   const state = buildState();
-  lastOwnSaveStamp = state._saved; // husk vår egen lagring så vi ignorerer ekko
+  // Husk våre egne lagringer i 10 sek så vi ignorerer ekko (selv ved raske endringer)
+  recentOwnSaves.add(state._saved);
+  setTimeout(() => recentOwnSaves.delete(state._saved), 10000);
   try {
     const { error } = await db.from(DB_TABLE).upsert({
       user_id: effectiveId,
@@ -2975,8 +2977,8 @@ function startRealtime() {
       filter: `user_id=eq.${effectiveId}`,
     }, payload => {
       if (!payload.new?.data) return;
-      // Ignorer vår egen lagring som ekkoer tilbake
-      if (payload.new.data._saved === lastOwnSaveStamp) return;
+      // Ignorer våre egne lagringer som ekkoer tilbake
+      if (recentOwnSaves.has(payload.new.data._saved)) return;
       applyState(payload.new.data);
       render();
       renderBudget();
