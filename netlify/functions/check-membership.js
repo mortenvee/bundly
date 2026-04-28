@@ -34,19 +34,19 @@ exports.handler = async (event) => {
     const userId = userData.id;
     const email  = userData.email;
 
-    // Søk først på member_id, så på member_email (to separate kall unngår or-filter-problemer)
+    // Søk på member_id
     let row = null;
-
-    const byIdRes = await fetch(
+    const byIdRes  = await fetch(
       `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_id=eq.${userId}&limit=1`,
       { headers: { ...HDR, 'Prefer': 'return=representation' } }
     );
     const byIdRows = byIdRes.ok ? await byIdRes.json() : [];
     if (byIdRows.length) row = byIdRows[0];
 
+    // Fallback: søk på member_email
     if (!row) {
-      const byEmailRes = await fetch(
-        `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_email=eq.${encodeURIComponent(email)}&limit=1`,
+      const byEmailRes  = await fetch(
+        `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_email=eq.${email}&limit=1`,
         { headers: { ...HDR, 'Prefer': 'return=representation' } }
       );
       const byEmailRows = byEmailRes.ok ? await byEmailRes.json() : [];
@@ -58,12 +58,21 @@ exports.handler = async (event) => {
     const ownerId  = row.owner_id;
     let ownerEmail = row.owner_email || '';
 
-    // Fallback: hent e-post fra auth admin hvis kolonnen er tom
+    // Hent eierens e-post fra brukerlisten hvis kolonnen er tom
     if (!ownerEmail) {
-      const ownerRes  = await fetch(`${SB}/auth/v1/admin/users/${ownerId}`, { headers: HDR });
-      const ownerText = await ownerRes.text();
-      try { ownerEmail = JSON.parse(ownerText)?.email || ''; } catch(e) {}
-      console.log('owner fallback lookup:', ownerId, '->', ownerEmail);
+      const listRes  = await fetch(`${SB}/auth/v1/admin/users?page=1&per_page=1000`, { headers: HDR });
+      const listData = listRes.ok ? await listRes.json() : {};
+      const ownerUser = (listData.users || []).find(u => u.id === ownerId);
+      ownerEmail = ownerUser?.email || '';
+
+      // Oppdater raden med e-posten så vi slipper å hente den neste gang
+      if (ownerEmail) {
+        await fetch(
+          `${SB}/rest/v1/team_members?owner_id=eq.${ownerId}&member_email=eq.${email}`,
+          { method: 'PATCH', headers: { ...HDR, 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ owner_email: ownerEmail }) }
+        );
+      }
     }
 
     // Hent eierens plan
@@ -75,7 +84,6 @@ exports.handler = async (event) => {
     const sub  = subs[0];
     const plan = (sub?.status === 'active' && sub?.plan !== 'gratis') ? sub.plan : 'familie';
 
-    console.log('check-membership result:', { userId, email, ownerId, ownerEmail, plan });
     return json(200, { isMember: true, ownerId, ownerEmail, plan });
 
   } catch (err) {
