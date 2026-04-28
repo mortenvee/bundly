@@ -25,7 +25,7 @@ exports.handler = async (event) => {
     const userToken = (event.headers['authorization'] || '').replace('Bearer ', '');
     if (!userToken) return json(401, { error: 'Ikke innlogget' });
 
-    const userRes = await fetch(`${SB}/auth/v1/user`, {
+    const userRes  = await fetch(`${SB}/auth/v1/user`, {
       headers: { 'Authorization': `Bearer ${userToken}`, 'apikey': KEY },
     });
     const userData = userRes.ok ? await userRes.json() : {};
@@ -34,16 +34,28 @@ exports.handler = async (event) => {
     const userId = userData.id;
     const email  = userData.email;
 
-    // Slå opp i team_members med service key (bypasser RLS)
-    const res = await fetch(
-      `${SB}/rest/v1/team_members?select=owner_id,owner_email&or=(member_id.eq.${userId},member_email.eq.${encodeURIComponent(email)})&limit=1`,
+    // Søk først på member_id, så på member_email (to separate kall unngår or-filter-problemer)
+    let row = null;
+
+    const byIdRes = await fetch(
+      `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_id=eq.${userId}&limit=1`,
       { headers: { ...HDR, 'Prefer': 'return=representation' } }
     );
-    const rows = res.ok ? await res.json() : [];
-    const row  = rows[0];
+    const byIdRows = byIdRes.ok ? await byIdRes.json() : [];
+    if (byIdRows.length) row = byIdRows[0];
+
+    if (!row) {
+      const byEmailRes = await fetch(
+        `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_email=eq.${encodeURIComponent(email)}&limit=1`,
+        { headers: { ...HDR, 'Prefer': 'return=representation' } }
+      );
+      const byEmailRows = byEmailRes.ok ? await byEmailRes.json() : [];
+      if (byEmailRows.length) row = byEmailRows[0];
+    }
+
     if (!row?.owner_id) return json(200, { isMember: false });
 
-    const ownerId = row.owner_id;
+    const ownerId  = row.owner_id;
     let ownerEmail = row.owner_email || '';
 
     // Fallback: hent e-post fra auth admin hvis kolonnen er tom
@@ -51,6 +63,7 @@ exports.handler = async (event) => {
       const ownerRes  = await fetch(`${SB}/auth/v1/admin/users/${ownerId}`, { headers: HDR });
       const ownerText = await ownerRes.text();
       try { ownerEmail = JSON.parse(ownerText)?.email || ''; } catch(e) {}
+      console.log('owner fallback lookup:', ownerId, '->', ownerEmail);
     }
 
     // Hent eierens plan
@@ -62,6 +75,7 @@ exports.handler = async (event) => {
     const sub  = subs[0];
     const plan = (sub?.status === 'active' && sub?.plan !== 'gratis') ? sub.plan : 'familie';
 
+    console.log('check-membership result:', { userId, email, ownerId, ownerEmail, plan });
     return json(200, { isMember: true, ownerId, ownerEmail, plan });
 
   } catch (err) {
