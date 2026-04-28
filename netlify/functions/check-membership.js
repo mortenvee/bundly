@@ -43,8 +43,15 @@ exports.handler = async (event) => {
     const row  = rows[0];
     if (!row?.owner_id) return json(200, { isMember: false });
 
-    const ownerId    = row.owner_id;
-    const ownerEmail = row.owner_email || '';
+    const ownerId = row.owner_id;
+    let ownerEmail = row.owner_email || '';
+
+    // Fallback: hent e-post fra auth admin hvis kolonnen er tom
+    if (!ownerEmail) {
+      const ownerRes  = await fetch(`${SB}/auth/v1/admin/users/${ownerId}`, { headers: HDR });
+      const ownerText = await ownerRes.text();
+      try { ownerEmail = JSON.parse(ownerText)?.email || ''; } catch(e) {}
+    }
 
     // Hent eierens plan
     const subRes = await fetch(
