@@ -35,25 +35,42 @@ exports.handler = async (event) => {
     const usersData = await usersRes.json();
     const users = usersData.users || [];
 
-    // Hent alle abonnementer
-    const subsRes = await fetch(`${SB}/rest/v1/subscriptions?select=*`, {
-      headers: { ...HDR, 'Prefer': 'return=representation' }
-    });
-    const subs = subsRes.ok ? await subsRes.json() : [];
+    // Hent alle abonnementer og teammedlemmer parallelt
+    const [subsRes, membersRes] = await Promise.all([
+      fetch(`${SB}/rest/v1/subscriptions?select=*`, {
+        headers: { ...HDR, 'Prefer': 'return=representation' }
+      }),
+      fetch(`${SB}/rest/v1/team_members?select=member_id,member_email,owner_email`, {
+        headers: { ...HDR, 'Prefer': 'return=representation' }
+      }),
+    ]);
+    const subs    = subsRes.ok    ? await subsRes.json()    : [];
+    const members = membersRes.ok ? await membersRes.json() : [];
 
     // Slå sammen
-    const subsMap = {};
+    const subsMap    = {};
     subs.forEach(s => subsMap[s.user_id] = s);
 
-    const merged = users.map(u => ({
-      id:         u.id,
-      email:      u.email,
-      created_at: u.created_at,
-      last_sign_in: u.last_sign_in_at,
-      plan:       subsMap[u.id]?.plan   || 'gratis',
-      status:     subsMap[u.id]?.status || 'none',
-      period:     subsMap[u.id]?.period || null,
-    }));
+    // Teammedlemmer: match på member_id eller member_email
+    const memberMap = {}; // userId/email → owner_email
+    members.forEach(m => {
+      if (m.member_id)    memberMap[m.member_id]    = m.owner_email || 'ukjent eier';
+      if (m.member_email) memberMap[m.member_email] = m.owner_email || 'ukjent eier';
+    });
+
+    const merged = users.map(u => {
+      const ownerEmail = memberMap[u.id] || memberMap[u.email] || null;
+      return {
+        id:           u.id,
+        email:        u.email,
+        created_at:   u.created_at,
+        last_sign_in: u.last_sign_in_at,
+        plan:         ownerEmail ? 'team-member' : (subsMap[u.id]?.plan   || 'gratis'),
+        status:       ownerEmail ? ownerEmail    : (subsMap[u.id]?.status || 'none'),
+        period:       subsMap[u.id]?.period || null,
+        teamOwner:    ownerEmail,
+      };
+    });
 
     return json(200, { users: merged, total: merged.length });
 
