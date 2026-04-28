@@ -3225,23 +3225,43 @@ async function renderTeam() {
   const fillEl    = document.getElementById('teamLicenseFill');
   const inviteBtn = document.getElementById('teamInviteBtn');
 
-  // Teammedlem-visning: vis hvem sitt team en er en del av
+  // Teammedlem-visning: hent fersk info fra server
   if (teamOwnerId) {
-    const displayName = teamOwnerEmail || 'eieren';
-    infoEl.textContent = `Du er med i ${displayName}s team`;
+    infoEl.textContent     = 'Laster teaminfo…';
     barEl.style.display    = 'none';
     inviteBtn.style.display = 'none';
-    listEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:16px;padding:20px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:12px">
-        <div style="width:44px;height:44px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">👑</div>
-        <div>
-          <div style="font-size:0.92rem;color:#f1f5f9;font-weight:600">${teamOwnerEmail}</div>
-          <div style="font-size:0.78rem;color:#6366f1;margin-top:2px;font-weight:500">Teamets eier</div>
+
+    try {
+      const { data: { session } } = await db.auth.getSession();
+      const memberRes  = await fetch('/.netlify/functions/check-membership', {
+        headers: { 'Authorization': `Bearer ${session?.access_token}` },
+      });
+      const memberData = memberRes.ok ? await memberRes.json() : {};
+      const ownerEmail = memberData.ownerEmail || localStorage.getItem('bundly_team_owner_email') || '';
+
+      if (ownerEmail) {
+        localStorage.setItem('bundly_team_owner_email', ownerEmail);
+      }
+
+      infoEl.textContent = ownerEmail
+        ? `Du er med i ${ownerEmail} sitt team`
+        : 'Du er med i dette teamet';
+
+      listEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:16px;padding:20px;background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:12px">
+          <div style="width:44px;height:44px;border-radius:50%;background:#6366f1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">👑</div>
+          <div>
+            <div style="font-size:0.92rem;color:#f1f5f9;font-weight:600">${ownerEmail || 'Teamets eier'}</div>
+            <div style="font-size:0.78rem;color:#6366f1;margin-top:2px;font-weight:500">Teamets eier</div>
+          </div>
         </div>
-      </div>
-      <div style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;font-size:0.83rem;color:#64748b">
-        Du har tilgang til dette prosjektet via teamet. Kontakt eieren for å gjøre endringer i teamet.
-      </div>`;
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;font-size:0.83rem;color:#64748b">
+          Du har tilgang til dette prosjektet via teamet. Kontakt eieren for å gjøre endringer i teamet.
+        </div>`;
+    } catch(e) {
+      infoEl.textContent = 'Du er med i dette teamet';
+      listEl.innerHTML = '';
+    }
     return;
   }
 
