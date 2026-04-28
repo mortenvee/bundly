@@ -2893,8 +2893,8 @@ const supabaseReady = SUPABASE_URL !== 'DIN_SUPABASE_URL' && SUPABASE_KEY !== 'D
 const db = supabaseReady ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 // Hvis brukeren er et teammedlem, bruk eierens user_id for data
-const teamOwnerId    = sessionStorage.getItem('bundly_team_owner')       || null;
-const teamOwnerEmail = sessionStorage.getItem('bundly_team_owner_email') || '';
+const teamOwnerId    = localStorage.getItem('bundly_team_owner')       || null;
+const teamOwnerEmail = localStorage.getItem('bundly_team_owner_email') || '';
 
 /* Statusindikator */
 function setDbStatus(status) {
