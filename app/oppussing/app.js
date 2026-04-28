@@ -611,6 +611,9 @@ function renderGantt() {
         </div>
       </div>
     </div>`;
+
+  // Oppdater milepæl-listen alltid når grafen rendres (inkl. realtime-sync)
+  renderMilestoneList();
 }
 
 /* ── Tooltip ── */
@@ -2924,6 +2927,7 @@ async function saveToDb() {
   if (!supabaseReady || !currentUser) { saveToLocalStorage(); return; }
   const effectiveId = teamOwnerId || currentUser.id;
   const state = buildState();
+  console.log('[saveToDb] lagrer til user_id:', effectiveId, 'milestones:', state.milestones?.length || 0);
   // Suspender realtime-anvendelse i 3 sek så vi ikke ekko'er over egen endring
   suppressRealtimeUntil = Date.now() + 3000;
   try {
@@ -2933,6 +2937,7 @@ async function saveToDb() {
       updated_at: new Date().toISOString()
     });
     if (error) throw error;
+    console.log('[saveToDb] OK');
     saveToLocalStorage();
     setDbStatus('ok');
   } catch(e) {
@@ -4083,10 +4088,13 @@ function addMilestone() {
     return;
   }
   milestones.push({ id: cid(), title, date, color: selectedMsColor });
+  console.log('[addMilestone] lagt til:', title, '- totalt:', milestones.length);
   document.getElementById('msTitle').value = '';
   document.getElementById('msDate').value  = '';
   renderMilestoneList();
   renderGantt();
+  saveState();
+  console.log('[addMilestone] saveState() kalt');
 }
 
 function deleteMilestone(id) {
