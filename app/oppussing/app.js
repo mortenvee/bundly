@@ -2979,10 +2979,16 @@ function startRealtime() {
       // Ignorer ekko fra våre egne nylige lagringer
       if (Date.now() < suppressRealtimeUntil) return;
       applyState(payload.new.data);
-      render();
-      renderBudget();
-      renderForum();
-      renderDashboard();
+      // Re-render alle fanene
+      render();             // Kanban-tavle
+      renderGantt();        // Gantt
+      renderBudget();       // Budsjett
+      renderForum();        // Diskusjon
+      renderSuppliers();    // Leverandører
+      renderDecisions();    // Beslutninger
+      renderProgressPhotos();// Fremdrift
+      renderDocuments();    // Arkiv
+      renderDashboard();    // Dashboard
       setDbStatus('realtime');
       setTimeout(() => setDbStatus('ok'), 2000);
     })
