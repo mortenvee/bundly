@@ -106,7 +106,7 @@ exports.handler = async (event) => {
     const ownerName = userData.email?.split('@')[0] || userData.email || 'en annen bruker';
 
     // Send e-post med koden via Resend
-    await fetch('https://api.resend.com/emails', {
+    const emailRes  = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -143,8 +143,13 @@ exports.handler = async (event) => {
           </div>`,
       }),
     });
+    const emailText = await emailRes.text();
+    if (!emailRes.ok) {
+      console.error('Resend feil:', emailRes.status, emailText);
+      return json(400, { error: `E-post feilet (${emailRes.status}): ${emailText}` });
+    }
 
-    return json(200, { ok: true });
+    return json(200, { ok: true, code: inviteCode });
 
   } catch (err) {
     console.error('invite-user error:', err);
