@@ -2918,10 +2918,13 @@ function scheduleDbSave() {
   setDbStatus('saving');
 }
 
+let lastOwnSaveStamp = null;
+
 async function saveToDb() {
   if (!supabaseReady || !currentUser) { saveToLocalStorage(); return; }
   const effectiveId = teamOwnerId || currentUser.id;
   const state = buildState();
+  lastOwnSaveStamp = state._saved; // husk vår egen lagring så vi ignorerer ekko
   try {
     const { error } = await db.from(DB_TABLE).upsert({
       user_id: effectiveId,
@@ -2971,15 +2974,16 @@ function startRealtime() {
       table:  DB_TABLE,
       filter: `user_id=eq.${effectiveId}`,
     }, payload => {
-      if (payload.new?.data) {
-        applyState(payload.new.data);
-        render();
-        renderBudget();
-        renderForum();
-        renderDashboard();
-        setDbStatus('realtime');
-        setTimeout(() => setDbStatus('ok'), 2000);
-      }
+      if (!payload.new?.data) return;
+      // Ignorer vår egen lagring som ekkoer tilbake
+      if (payload.new.data._saved === lastOwnSaveStamp) return;
+      applyState(payload.new.data);
+      render();
+      renderBudget();
+      renderForum();
+      renderDashboard();
+      setDbStatus('realtime');
+      setTimeout(() => setDbStatus('ok'), 2000);
     })
     .subscribe(status => {
       if (status === 'SUBSCRIBED') setDbStatus('ok');
