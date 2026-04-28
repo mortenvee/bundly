@@ -46,7 +46,7 @@ exports.handler = async (event) => {
     // Fallback: søk på member_email
     if (!row) {
       const byEmailRes  = await fetch(
-        `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_email=eq.${email}&limit=1`,
+        `${SB}/rest/v1/team_members?select=owner_id,owner_email&member_email=eq.${encodeURIComponent(email)}&limit=1`,
         { headers: { ...HDR, 'Prefer': 'return=representation' } }
       );
       const byEmailRows = byEmailRes.ok ? await byEmailRes.json() : [];
@@ -68,7 +68,7 @@ exports.handler = async (event) => {
       // Oppdater raden med e-posten så vi slipper å hente den neste gang
       if (ownerEmail) {
         await fetch(
-          `${SB}/rest/v1/team_members?owner_id=eq.${ownerId}&member_email=eq.${email}`,
+          `${SB}/rest/v1/team_members?owner_id=eq.${ownerId}&member_email=eq.${encodeURIComponent(email)}`,
           { method: 'PATCH', headers: { ...HDR, 'Prefer': 'return=minimal' },
             body: JSON.stringify({ owner_email: ownerEmail }) }
         );
