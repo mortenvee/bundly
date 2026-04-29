@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blogg — Bundly</title>
+  <meta name="description" content="Tips, guider og historier om boligprosjekter, oppussing, bryllup og mer." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:          #fafaf7;
+      --bg-warm:     #f3f0e8;
+      --surface:     #ffffff;
+      --text:        #1a1a1a;
+      --text-soft:   #3d3d3d;
+      --muted:       #6b6b6b;
+      --muted-2:     #9a9a96;
+      --accent:      #1e5b5e;
+      --accent-2:    #0f3d3f;
+      --accent-soft: #e6efef;
+      --border:      rgba(0,0,0,0.08);
+      --radius:      14px;
+      --radius-lg:   22px;
+      --shadow-sm:   0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md:   0 4px 12px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(250,250,247,0.88);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px) saturate(180%);
+    }
+    .nav-inner { display: flex; align-items: center; gap: 32px; height: 60px; }
+    .nav-logo { font-size: 1rem; font-weight: 800; letter-spacing: -0.04em; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 28px; margin-left: auto; }
+    .nav-links a { font-size: 0.875rem; font-weight: 500; color: var(--muted); transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+    .nav-cta { background: var(--accent) !important; color: #fff !important; padding: 8px 20px; border-radius: 9px; font-weight: 600 !important; transition: background .15s !important; }
+    .nav-cta:hover { background: var(--accent-2) !important; }
+
+    /* PAGE HERO */
+    .page-hero { padding: 80px 0 60px; text-align: center; }
+    .page-eyebrow { display: inline-block; font-size: 12px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 20px; }
+    .page-hero h1 { font-size: clamp(32px, 5vw, 52px); font-weight: 800; letter-spacing: -0.04em; line-height: 1.12; margin-bottom: 16px; }
+    .page-hero p { font-size: 1rem; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.7; }
+
+    /* FEATURED POST */
+    .featured-post {
+      margin-bottom: 64px;
+    }
+    .featured-post a {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s, transform .2s;
+    }
+    .featured-post a:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    @media (max-width: 700px) { .featured-post a { grid-template-columns: 1fr; } }
+    .featured-art {
+      min-height: 260px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+      background: linear-gradient(135deg, #e8f0ef 0%, #c8dedd 100%);
+    }
+    .featured-body { padding: 40px 36px; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+    .post-tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); }
+    .featured-body h2 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.25; color: var(--text); }
+    .featured-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.65; }
+    .post-meta { font-size: 0.75rem; color: var(--muted-2); display: flex; gap: 10px; align-items: center; }
+    .post-meta span { display: flex; align-items: center; gap: 4px; }
+    .read-more { font-size: 0.875rem; font-weight: 600; color: var(--accent); display: inline-flex; align-items: center; gap: 5px; transition: gap .15s; }
+    .featured-post a:hover .read-more { gap: 9px; }
+
+    /* POST GRID */
+    .posts-section { padding-bottom: 100px; }
+    .posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 820px) { .posts-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 520px) { .posts-grid { grid-template-columns: 1fr; } }
+
+    .post-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow .2s, transform .2s;
+      display: flex; flex-direction: column;
+    }
+    .post-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .post-art {
+      height: 160px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.2rem;
+    }
+    .art-1 { background: linear-gradient(135deg, #f5ede8 0%, #e8d4cc 100%); }
+    .art-2 { background: linear-gradient(135deg, #ecedf5 0%, #d8daed 100%); }
+    .art-3 { background: linear-gradient(135deg, #e8f0e8 0%, #c8ddc8 100%); }
+    .art-4 { background: linear-gradient(135deg, #f5f0e0 0%, #ede0c0 100%); }
+    .art-5 { background: linear-gradient(135deg, #f0eaf5 0%, #e0d0ed 100%); }
+    .art-6 { background: linear-gradient(135deg, #e8f0ef 0%, #c8dedd 100%); }
+
+    .post-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+    .post-body h3 { font-size: 1rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.35; color: var(--text); }
+    .post-body p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; flex: 1; }
+    .post-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 4px; }
+    .post-date { font-size: 0.72rem; color: var(--muted-2); }
+
+    /* COMING SOON OVERLAY */
+    .post-card.soon { position: relative; }
+    .soon-overlay {
+      position: absolute; inset: 0;
+      background: rgba(250,250,247,0.7);
+      backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-lg);
+    }
+    .soon-pill { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: var(--surface); border: 1px solid var(--border); color: var(--muted-2); padding: 6px 14px; border-radius: 99px; }
+
+    /* FOOTER */
+    footer { background: var(--bg-warm); border-top: 1px solid var(--border); padding: 36px 0; text-align: center; }
+    footer .nav-logo { justify-content: center; margin-bottom: 8px; }
+    footer p { font-size: 0.82rem; color: var(--muted-2); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span>✦</span> Bundly</a>
+    <div class="nav-links">
+      <a href="/planleggere/">Planleggere</a>
+      <a href="/#priser">Priser</a>
+      <a href="/blogg/" class="active">Blogg</a>
+      <a href="/app/" class="nav-cta">Logg inn</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-hero">
+  <div class="container">
+    <span class="page-eyebrow">Bundly blogg</span>
+    <h1>Tips og inspirasjon</h1>
+    <p>Guider, sjekklister og historier for deg som planlegger noe stort i livet.</p>
+  </div>
+</div>
+
+<section class="posts-section">
+  <div class="container">
+
+    <!-- Featured -->
+    <div class="featured-post">
+      <a href="#">
+        <div class="featured-art">🏠</div>
+        <div class="featured-body">
+          <span class="post-tag">Oppussing</span>
+          <h2>Slik planlegger du baderomsrenovering uten å miste oversikten</h2>
+          <p>Alt fra budsjettering og materiallister til håndverkere og tidsplan — vi går gjennom hele prosessen steg for steg.</p>
+          <div class="post-meta">
+            <span>📅 28. april 2025</span>
+            <span>⏱ 7 min lesing</span>
+          </div>
+          <span class="read-more">Les artikkelen →</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Post grid -->
+    <div class="posts-grid">
+
+      <div class="post-card">
+        <div class="post-art art-1">💰</div>
+        <div class="post-body">
+          <span class="post-tag">Budsjett</span>
+          <h3>5 feil folk gjør med oppussingsbudsjettet</h3>
+          <p>Disse feilene koster mest — og er enklest å unngå hvis du vet hva du ser etter på forhånd.</p>
+          <div class="post-footer">
+            <span class="post-date">21. april 2025</span>
+            <span class="read-more" style="font-size:0.78rem">Les →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-art art-2">📋</div>
+        <div class="post-body">
+          <span class="post-tag">Sjekkliste</span>
+          <h3>Den komplette sjekklisten for kjøp av bruktbolig</h3>
+          <p>22 punkter du bør ha kontroll på før du signerer kontrakten — lastes ned som PDF.</p>
+          <div class="post-footer">
+            <span class="post-date">14. april 2025</span>
+            <span class="read-more" style="font-size:0.78rem">Les →</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-card">
+        <div class="post-art art-3">👷</div>
+        <div class="post-body">
+          <span class="post-tag">Håndverkere</span>
+          <h3>Slik finner og følger du opp håndverkere</h3>
+          <p>Hva du bør spørre om i første møte, og hvordan du dokumenterer arbeidet underveis.</p>
+          <div class="post-footer">
+            <span class="post-date">7. april 2025</span>
+            <span class="read-more" style="font-size:0.78rem">Les →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coming soon cards -->
+      <div class="post-card soon">
+        <div class="post-art art-4">💒</div>
+        <div class="post-body">
+          <span class="post-tag">Bryllup</span>
+          <h3>12-månedersplan for bryllupsplanlegging</h3>
+          <p>Fra lokale og catering til invitasjoner og takkekort — en realistisk tidslinje.</p>
+          <div class="post-footer"><span class="post-date">Snart</span></div>
+        </div>
+        <div class="soon-overlay"><span class="soon-pill">Kommer snart</span></div>
+      </div>
+
+      <div class="post-card soon">
+        <div class="post-art art-5">📦</div>
+        <div class="post-body">
+          <span class="post-tag">Flytting</span>
+          <h3>Den ultimate pakkelisten for flytting</h3>
+          <p>Vi har samlet alt du trenger å huske — sortert rom for rom og prioritert etter dato.</p>
+          <div class="post-footer"><span class="post-date">Snart</span></div>
+        </div>
+        <div class="soon-overlay"><span class="soon-pill">Kommer snart</span></div>
+      </div>
+
+      <div class="post-card soon">
+        <div class="post-art art-6">🏔</div>
+        <div class="post-body">
+          <span class="post-tag">Hytte</span>
+          <h3>Hva koster det egentlig å bygge hytte i 2025?</h3>
+          <p>Vi går gjennom de vanligste postene og hva som oftest overraske folk i ettertid.</p>
+          <div class="post-footer"><span class="post-date">Snart</span></div>
+        </div>
+        <div class="soon-overlay"><span class="soon-pill">Kommer snart</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <a href="/" class="nav-logo"><span>✦</span> Bundly</a>
+    <p>Laget i Norge — for livets store prosjekter.</p>
+  </div>
+</footer>
+
+</body>
+</html>
