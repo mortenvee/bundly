@@ -63,7 +63,6 @@
   <a href="/" class="brand-mark" title="Bundly">✦ Bundly</a>
   <span class="brand-divider">/</span>
   <h1>Oppussingsplanlegger</h1>
-  <span class="db-status" id="dbStatus"></span>
   <div class="header-actions">
     <a href="/app/" class="back-btn" title="Tilbake til alle planleggere">← Planleggere</a>
     <span id="userEmail" style="font-size:12px;color:#64748b;margin-right:4px;"></span>
@@ -78,6 +77,9 @@
   <button class="mob-menu-btn" id="mobMenuBtn" onclick="toggleMobMenu()">⋯</button>
   </div>
 </header>
+
+<!-- Sync-status (flytende, vises kun ved aktivitet/feil — utenfor header for å unngå backdrop-filter containing block) -->
+<span class="db-status" id="dbStatus"></span>
 
 <!-- Mobil dropdown-meny -->
 <div class="mob-dropdown" id="mobDropdown">
