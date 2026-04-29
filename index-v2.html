@@ -157,7 +157,11 @@
       background-image: url('/assets/img/hero-cinema.jpg');
       background-size: cover;
       background-position: center;
-      transform: scale(1.04);
+      /* Skalerer litt opp så vi unngår at blur-kantene viser */
+      transform: scale(1.1);
+      transform-origin: center;
+      will-change: filter, opacity;
+      transition: filter .1s linear, opacity .1s linear;
     }
     /* Plassholder for fremtidig video — bytt .cinema-bg div ut med <video> ved behov */
     .cinema-overlay {
@@ -1515,14 +1519,37 @@
     if (e.key === 'Escape') closeDemo();
   });
 
-  // Nav blir solid når brukeren scroller forbi cinematic hero
+  // Nav blir solid + cinematic hero får økende blur når brukeren scroller
   const nav = document.querySelector('nav');
-  function updateNavOnScroll() {
-    if (window.scrollY > 60) nav.classList.add('scrolled');
+  const cinema = document.querySelector('.cinema');
+  const cinemaBg = document.querySelector('.cinema-bg');
+  let ticking = false;
+
+  function updateOnScroll() {
+    const y = window.scrollY;
+
+    // Nav-state
+    if (y > 60) nav.classList.add('scrolled');
     else nav.classList.remove('scrolled');
+
+    // Hero blur + fade (basert på hvor langt vi er gjennom cinema-seksjonen)
+    if (cinema && cinemaBg) {
+      const h = cinema.offsetHeight;
+      const progress = Math.min(1, Math.max(0, y / h));
+      // Maks 18px blur, 35 % nedtoning ved bunnen
+      cinemaBg.style.filter = `blur(${progress * 18}px)`;
+      cinemaBg.style.opacity = 1 - progress * 0.35;
+    }
+    ticking = false;
   }
-  window.addEventListener('scroll', updateNavOnScroll, { passive: true });
-  updateNavOnScroll();
+
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(updateOnScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+  updateOnScroll();
 </script>
 
 <!-- ════ FOOTER ════ -->
