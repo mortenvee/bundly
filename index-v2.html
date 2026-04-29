@@ -316,81 +316,164 @@
     }
     .hero-fine span { margin: 0 6px; opacity: 0.4; }
 
-    /* Hero image stack */
+    /* ── Hero product mockup ── */
     .hero-visual {
       position: relative;
-      aspect-ratio: 4/5;
-      max-width: 460px;
+      width: 100%;
+      max-width: 540px;
       margin-left: auto;
     }
-    .hero-photo {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-md);
-    }
-    .hero-photo-tag {
-      position: absolute;
-      bottom: 18px; left: 18px;
-      background: rgba(255,255,255,0.94);
-      backdrop-filter: blur(8px);
-      padding: 8px 14px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .hero-photo-tag .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-
-    /* Floating mini-card with app preview */
-    .hero-card {
-      position: absolute;
-      bottom: -32px;
-      right: -48px;
-      width: 220px;
+    .mock-window {
       background: var(--surface);
-      border-radius: var(--radius);
-      padding: 14px 16px;
+      border-radius: 14px;
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border);
-      transform: rotate(-2deg);
+      overflow: hidden;
+      transform: perspective(1400px) rotateY(-4deg) rotateX(2deg);
+      transform-origin: center;
     }
-    .hero-card-head {
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .mock-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      background: #f5f3ee;
+      border-bottom: 1px solid var(--border);
     }
-    .hero-card-head::before {
+    .mock-bar-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(0,0,0,0.12);
+    }
+    .mock-bar-url {
+      flex: 1;
+      margin-left: 8px;
+      background: #fff;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .mock-bar-url::before {
       content: '';
-      width: 8px; height: 8px; border-radius: 2px;
-      background: var(--accent);
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ade80;
     }
-    .hero-card-row {
+    .mock-tabs {
+      display: flex; gap: 2px;
+      padding: 8px 14px 0;
+      border-bottom: 1px solid var(--border);
+      background: #fbfaf6;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .mock-tabs::-webkit-scrollbar { display: none; }
+    .mock-tab {
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    .mock-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+    .mock-body { padding: 18px; }
+    .mock-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .mock-col {
+      background: #fbfaf6;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 200px;
+    }
+    .mock-col-head {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+      margin-bottom: 10px;
+    }
+    .mock-col-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+    }
+    .mock-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .mock-card-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.005em;
+      margin-bottom: 5px;
+      line-height: 1.3;
+    }
+    .mock-card-meta {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 9px;
+      color: var(--muted);
+    }
+    .mock-pill {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+    }
+    .mock-pill.budget { background: rgba(184,137,58,0.15); color: #8a6624; }
+    .mock-pill.material { background: rgba(122,139,122,0.18); color: #4a5d4a; }
+    .mock-pill.due { background: rgba(30,91,94,0.12); color: var(--accent); }
+
+    /* Floating bottom card showing "i dag" */
+    .hero-floater {
+      position: absolute;
+      bottom: -24px;
+      left: -32px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      box-shadow: var(--shadow-md);
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      padding: 6px 0;
-      border-top: 1px solid var(--border);
-      color: var(--text-soft);
+      gap: 12px;
+      z-index: 2;
     }
-    .hero-card-row::before {
-      content: '✓';
+    .hero-floater-icon {
+      width: 36px; height: 36px;
+      background: var(--accent-soft);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: var(--accent);
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .hero-floater-text {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .hero-floater-text strong {
+      display: block;
+      color: var(--text);
       font-weight: 600;
+      font-size: 13px;
+      letter-spacing: -0.01em;
+      margin-bottom: 1px;
     }
 
     /* ══════════════════════════════
@@ -583,19 +666,70 @@
       </div>
 
       <div class="hero-visual">
-        <!-- Plassholder-bilde fra Unsplash (varmt skandinavisk hjem under oppussing) -->
-        <img class="hero-photo"
-             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80&auto=format&fit=crop"
-             alt="Lyst, skandinavisk hjem under oppussing" />
-        <div class="hero-photo-tag">
-          <span class="dot"></span>
-          Anniken &amp; Tor — bad-renovering
+        <!-- HTML/CSS-mockup av appen (kanban-fanen) -->
+        <div class="mock-window" aria-hidden="true">
+          <div class="mock-bar">
+            <span class="mock-bar-dot"></span>
+            <span class="mock-bar-dot"></span>
+            <span class="mock-bar-dot"></span>
+            <span class="mock-bar-url">app.bundly.no/oppussing</span>
+          </div>
+          <div class="mock-tabs">
+            <span class="mock-tab">Dashboard</span>
+            <span class="mock-tab active">Tavle</span>
+            <span class="mock-tab">Gantt</span>
+            <span class="mock-tab">Budsjett</span>
+            <span class="mock-tab">Diskusjon</span>
+          </div>
+          <div class="mock-body">
+            <div class="mock-board">
+              <div class="mock-col">
+                <div class="mock-col-head"><span class="mock-col-dot" style="background:#b8893a"></span> Planlagt</div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Bytte vinduer i stua</div>
+                  <div class="mock-card-meta"><span class="mock-pill budget">💰 Budsjett</span> 12. mai</div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Bestille kjøkken</div>
+                  <div class="mock-card-meta"><span class="mock-pill due">📅 24. mai</span></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Hente nøkler hos megler</div>
+                  <div class="mock-card-meta">Anniken</div>
+                </div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-head"><span class="mock-col-dot" style="background:#1e5b5e"></span> Pågår</div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Flislegge bad</div>
+                  <div class="mock-card-meta"><span class="mock-pill material">🧱 Material</span> Tor</div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Male soverom</div>
+                  <div class="mock-card-meta">2 av 3 vegger</div>
+                </div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-head"><span class="mock-col-dot" style="background:#7a8b7a"></span> Ferdig</div>
+                <div class="mock-card" style="opacity:0.65">
+                  <div class="mock-card-title">Rive vegg mellom kjøkken og stue</div>
+                  <div class="mock-card-meta">✓ 18. apr</div>
+                </div>
+                <div class="mock-card" style="opacity:0.65">
+                  <div class="mock-card-title">Bestille parkett</div>
+                  <div class="mock-card-meta">✓ 21. apr</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="hero-card">
-          <div class="hero-card-head">Pågår denne uken</div>
-          <div class="hero-card-row">Bytte vinduer</div>
-          <div class="hero-card-row">Flislegge bad</div>
-          <div class="hero-card-row">Bestille kjøkken</div>
+
+        <div class="hero-floater" aria-hidden="true">
+          <div class="hero-floater-icon">✦</div>
+          <div class="hero-floater-text">
+            <strong>Synket på tvers av enheter</strong>
+            Du og partneren ser samme tavle live
+          </div>
         </div>
       </div>
     </div>
