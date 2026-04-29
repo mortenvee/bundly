@@ -2900,17 +2900,23 @@ const teamOwnerId    = localStorage.getItem('bundly_team_owner')       || null;
 const teamOwnerEmail = localStorage.getItem('bundly_team_owner_email') || '';
 
 /* Statusindikator */
+let dbStatusHideTimer = null;
 function setDbStatus(status) {
   const el = document.getElementById('dbStatus');
   if (!el) return;
   const cfg = {
-    ok:       { dot: '#4ade80', text: 'Synkronisert' },
-    saving:   { dot: '#facc15', text: 'Lagrer…'      },
-    error:    { dot: '#f87171', text: 'Frakoblet'    },
-    offline:  { dot: '#64748b', text: 'Lokal modus'  },
-    realtime: { dot: '#6366f1', text: 'Tilkoblet ✦'  },
-  }[status] || { dot: '#64748b', text: status };
-  el.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${cfg.dot};margin-right:5px"></span>${cfg.text}`;
+    ok:       { dot: '#4ade80', text: 'Lagret',     hide: 1500 },
+    saving:   { dot: '#facc15', text: 'Lagrer…',    hide: null },
+    error:    { dot: '#f87171', text: 'Frakoblet',  hide: null },
+    offline:  { dot: '#64748b', text: 'Lokal modus',hide: null },
+    realtime: { dot: '#6366f1', text: 'Oppdatert ✦',hide: 1500 },
+  }[status] || { dot: '#64748b', text: status, hide: 1500 };
+  el.innerHTML = `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${cfg.dot}"></span>${cfg.text}`;
+  el.classList.add('is-visible');
+  clearTimeout(dbStatusHideTimer);
+  if (cfg.hide) {
+    dbStatusHideTimer = setTimeout(() => el.classList.remove('is-visible'), cfg.hide);
+  }
 }
 
 /* Debounce — unngår å skrive til DB for hvert tastetrykk */
@@ -3634,16 +3640,32 @@ function renderDashboard() {
 
   // Quick stats
   const qsWidget = `
-    <div class="dash-widget">
-      <div class="dash-widget-header"><span>📊</span><h3>Hurtigstatistikk</h3></div>
+    <div class="dash-widget dash-tools">
+      <div class="dash-widget-header"><span>🛠</span><h3>Verktøy &amp; eksport</h3></div>
       <div class="dash-widget-body">
-        <div class="dash-quick-stats">
-          <div class="dash-qs"><div class="dqv">${budgetPosts.length}</div><div class="dql">Budsjettposter</div></div>
-          <div class="dash-qs"><div class="dqv">${forumTopics.length}</div><div class="dql">Diskusjonstemaer</div></div>
-          <div class="dash-qs"><div class="dqv">${suppliers.length}</div><div class="dql">Leverandører</div></div>
-          <div class="dash-qs"><div class="dqv">${decisions.length}</div><div class="dql">Beslutninger</div></div>
-          <div class="dash-qs"><div class="dqv">${progressPhotos.length}</div><div class="dql">Fremdriftsbilder</div></div>
-          <div class="dash-qs"><div class="dqv">${columns.reduce((s,c)=>s+c.cards.length,0)}</div><div class="dql">Kanban-kort</div></div>
+        <div class="dash-tools-grid">
+          <button class="dash-tool-btn" onclick="exportPDF()" title="Eksporter hele prosjektet som PDF">
+            <span class="dt-icon">📄</span>
+            <div class="dt-text">
+              <div class="dt-title">Eksporter PDF</div>
+              <div class="dt-sub">Last ned hele prosjektet som rapport</div>
+            </div>
+          </button>
+          <button class="dash-tool-btn" onclick="exportData()" title="Eksporter all data som JSON-fil">
+            <span class="dt-icon">📤</span>
+            <div class="dt-text">
+              <div class="dt-title">Eksporter data (JSON)</div>
+              <div class="dt-sub">Sikkerhetskopi av alle oppføringer</div>
+            </div>
+          </button>
+          <label class="dash-tool-btn" title="Importer data fra en JSON-fil">
+            <span class="dt-icon">📥</span>
+            <div class="dt-text">
+              <div class="dt-title">Importer data</div>
+              <div class="dt-sub">Last inn fra en tidligere eksport</div>
+            </div>
+            <input type="file" accept=".json" onchange="importData(event)" style="display:none" />
+          </label>
         </div>
       </div>
     </div>`;

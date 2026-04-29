@@ -28,6 +28,16 @@
     }
     header .icon { font-size: 1.3rem; }
     header .subtitle { font-size: 0.75rem; color: #4a5568; letter-spacing: 0.2px; }
+    .brand-mark {
+      font-size: 1.05rem; font-weight: 700; color: #f1f5f9;
+      text-decoration: none; letter-spacing: -0.3px;
+      transition: color .15s;
+    }
+    .brand-mark:hover { color: #a5b4fc; }
+    .brand-divider {
+      color: #334155; font-size: 1.1rem; font-weight: 300;
+      margin: 0 -2px;
+    }
     .header-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .back-btn {
       display: flex; align-items: center; gap: 5px;
@@ -68,10 +78,19 @@
     .data-btn:hover { background: rgba(255,255,255,0.08); color: #94a3b8; border-color: rgba(255,255,255,0.15); }
     .data-btn input[type=file] { display: none; }
     .db-status {
-      font-size: 0.68rem; color: #374151;
-      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+      position: fixed; bottom: 16px; right: 16px;
+      z-index: 60;
+      font-size: 0.72rem; color: #cbd5e1;
+      display: none; align-items: center; gap: 6px; white-space: nowrap;
       letter-spacing: 0.2px;
+      background: rgba(15,23,42,0.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px; padding: 6px 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: opacity .25s ease;
     }
+    .db-status.is-visible { display: inline-flex; }
     /* Supabase-oppsett-banner */
     .setup-banner {
       margin: 16px 24px 0;
@@ -1162,6 +1181,32 @@
     .dash-qs { text-align: center; flex: 1; min-width: 70px; }
     .dash-qs .dqv { font-size: 1.6rem; font-weight: 800; color: #a5b4fc; }
     .dash-qs .dql { font-size: 0.7rem; color: #64748b; margin-top: 2px; }
+
+    /* Dashboard tools widget (Eksport/Import) */
+    .dash-tools { cursor: default; }
+    .dash-tools:hover { transform: none; }
+    .dash-tools-grid {
+      display: grid; gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+    .dash-tool-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-family: inherit; text-align: left;
+      cursor: pointer; transition: all .15s;
+    }
+    .dash-tool-btn:hover {
+      background: rgba(99,102,241,0.1);
+      border-color: rgba(99,102,241,0.35);
+    }
+    .dash-tool-btn .dt-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .dash-tool-btn .dt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .dash-tool-btn .dt-title { font-size: 0.84rem; font-weight: 600; color: #e2e8f0; }
+    .dash-tool-btn .dt-sub { font-size: 0.72rem; color: #64748b; }
 
     /* ══════════════════════════════════════
        LEVERANDØRBOK
