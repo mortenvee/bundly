@@ -1130,15 +1130,14 @@
     }
     .pricing-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
       align-items: start;
+      max-width: 860px;
+      margin: 0 auto;
     }
-    @media (max-width: 900px) {
-      .pricing-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 520px) {
-      .pricing-grid { grid-template-columns: 1fr; }
+    @media (max-width: 760px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 420px; }
     }
     .price-card {
       background: var(--surface);
@@ -1699,7 +1698,7 @@
     <div class="section-head">
       <div class="section-eyebrow">Priser</div>
       <h2>Enkel, ærlig prising</h2>
-      <p>Start gratis — oppgrader når du trenger mer. Ingen skjulte kostnader.</p>
+      <p>Velg planen som passer deg — oppgrader eller avbestill når som helst.</p>
     </div>
 
     <div class="pricing-toggle">
@@ -1711,43 +1710,24 @@
 
     <div class="pricing-grid">
 
-      <!-- Gratis -->
+      <!-- Enkel -->
       <div class="price-card">
         <div>
-          <div class="price-name">Gratis</div>
-          <div class="price-amount"><span class="price-kr">0</span><span class="price-period">kr/mnd</span></div>
-          <div class="price-yearly-note">&nbsp;</div>
-        </div>
-        <p class="price-desc">Perfekt for å komme i gang og prøve ut alle verktøyene.</p>
-        <hr class="price-divider">
-        <ul class="price-features">
-          <li class="price-feat"><span class="check">✓</span> 7 dager full tilgang</li>
-          <li class="price-feat"><span class="check">✓</span> 1 planlegger</li>
-          <li class="price-feat"><span class="check">✓</span> Tavle, Gantt, Budsjett</li>
-          <li class="price-feat"><span class="cross">–</span> Inviter andre</li>
-          <li class="price-feat"><span class="cross">–</span> PDF-eksport</li>
-        </ul>
-        <a href="/app/" class="price-cta outline">Kom i gang</a>
-      </div>
-
-      <!-- Starter -->
-      <div class="price-card">
-        <div>
-          <div class="price-name">Starter</div>
+          <div class="price-name">Enkel</div>
           <div class="price-amount">
-            <span class="price-kr" id="starter-price">49</span>
+            <span class="price-kr" id="enkel-price">29</span>
             <span class="price-period">kr/mnd</span>
           </div>
-          <div class="price-yearly-note" id="starter-note">faktureres månedlig</div>
+          <div class="price-yearly-note" id="enkel-note">faktureres månedlig</div>
         </div>
-        <p class="price-desc">For deg som planlegger alene og vil ha full tilgang.</p>
+        <p class="price-desc">For deg som planlegger ett prosjekt, gjerne med en partner.</p>
         <hr class="price-divider">
         <ul class="price-features">
-          <li class="price-feat"><span class="check">✓</span> Ubegrenset planleggere</li>
+          <li class="price-feat"><span class="check">✓</span> 1 planlegger</li>
+          <li class="price-feat"><span class="check">✓</span> 2 brukere</li>
           <li class="price-feat"><span class="check">✓</span> Tavle, Gantt, Budsjett</li>
           <li class="price-feat"><span class="check">✓</span> PDF-eksport</li>
-          <li class="price-feat"><span class="check">✓</span> Dokumentarkiv</li>
-          <li class="price-feat"><span class="cross">–</span> Inviter andre</li>
+          <li class="price-feat"><span class="cross">–</span> Flere planleggere</li>
         </ul>
         <a href="/app/" class="price-cta outline">Prøv gratis</a>
       </div>
@@ -1763,14 +1743,14 @@
           </div>
           <div class="price-yearly-note" id="familie-note">faktureres månedlig</div>
         </div>
-        <p class="price-desc">For familier og par som planlegger store prosjekter sammen.</p>
+        <p class="price-desc">For familier og par som har flere prosjekter på gang samtidig.</p>
         <hr class="price-divider">
         <ul class="price-features">
-          <li class="price-feat"><span class="check">✓</span> Alt i Starter</li>
-          <li class="price-feat"><span class="check">✓</span> Opptil 5 personer</li>
-          <li class="price-feat"><span class="check">✓</span> Delt tavle og budsjett</li>
-          <li class="price-feat"><span class="check">✓</span> Diskusjon og forum</li>
-          <li class="price-feat"><span class="check">✓</span> Fremdriftsbilder</li>
+          <li class="price-feat"><span class="check">✓</span> Alle planleggere</li>
+          <li class="price-feat"><span class="check">✓</span> Opptil 5 brukere</li>
+          <li class="price-feat"><span class="check">✓</span> Tavle, Gantt, Budsjett</li>
+          <li class="price-feat"><span class="check">✓</span> PDF-eksport</li>
+          <li class="price-feat"><span class="check">✓</span> Diskusjon og fremdriftsbilder</li>
         </ul>
         <a href="/app/" class="price-cta">Prøv gratis</a>
       </div>
@@ -1779,27 +1759,26 @@
       <div class="price-card">
         <div>
           <div class="price-name">Team</div>
-          <div class="price-amount">
-            <span class="price-kr" id="team-price">249</span>
-            <span class="price-period">kr/mnd</span>
+          <div class="price-amount" style="align-items:center;gap:8px">
+            <span style="font-size:1.6rem;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Kontakt oss</span>
           </div>
-          <div class="price-yearly-note" id="team-note">faktureres månedlig</div>
+          <div class="price-yearly-note">skreddersydd for større team</div>
         </div>
-        <p class="price-desc">For prosjektledere, håndverkere og borettslag.</p>
+        <p class="price-desc">For prosjektledere, håndverkere og borettslag med mange prosjekter.</p>
         <hr class="price-divider">
         <ul class="price-features">
           <li class="price-feat"><span class="check">✓</span> Alt i Familie</li>
-          <li class="price-feat"><span class="check">✓</span> Opptil 15 personer</li>
+          <li class="price-feat"><span class="check">✓</span> Opptil 15 brukere</li>
           <li class="price-feat"><span class="check">✓</span> Leverandørbok</li>
           <li class="price-feat"><span class="check">✓</span> Beslutningslogg</li>
           <li class="price-feat"><span class="check">✓</span> Prioritert support</li>
         </ul>
-        <a href="/app/" class="price-cta outline">Prøv gratis</a>
+        <a href="mailto:hei@bundly.no" class="price-cta outline">Kontakt salg →</a>
       </div>
 
     </div>
     <p style="text-align:center;font-size:0.82rem;color:var(--muted-2);margin-top:32px;">
-      Alle planer inkluderer 7 dager gratis prøvetid · Avbestill når som helst
+      Prøv 7 dager gratis · Avbestill når som helst · Ingen bindingstid
     </p>
   </div>
 </section>
@@ -1819,8 +1798,8 @@
 
 <script>
   // Prisingstoggel (månedlig / årlig)
-  const monthly = { starter: 49, familie: 99, team: 249 };
-  const yearly  = { starter: 39, familie: 79, team: 199 };
+  const monthly = { enkel: 29, familie: 99 };
+  const yearly  = { enkel: 23, familie: 79 };
   let isYearly = false;
 
   function toggleBilling() {
@@ -1828,7 +1807,7 @@
     document.getElementById('billingToggle').classList.toggle('yearly', isYearly);
     const prices = isYearly ? yearly : monthly;
     const note = isYearly ? 'faktureres årlig' : 'faktureres månedlig';
-    ['starter','familie','team'].forEach(p => {
+    ['enkel','familie'].forEach(p => {
       document.getElementById(p + '-price').textContent = prices[p];
       document.getElementById(p + '-note').textContent = note;
     });
