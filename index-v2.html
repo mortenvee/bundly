@@ -477,34 +477,94 @@
     }
 
     /* ══════════════════════════════
-       SOSIAL BEVIS / TRUST
+       PLANLEGGERE — kategori-kort
     ══════════════════════════════ */
-    .trust {
-      padding: 64px 0;
-      border-top: 1px solid var(--border);
+    .planner-strip {
+      padding: 96px 0 64px;
     }
-    .trust-label {
+    .planner-strip-head {
+      max-width: 720px;
+      margin: 0 auto 40px;
       text-align: center;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      margin-bottom: 28px;
     }
-    .trust-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 56px;
-      flex-wrap: wrap;
+    .planner-strip-head h2 {
+      font-size: clamp(28px, 3.6vw, 38px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 12px;
     }
-    .trust-item {
-      font-family: 'Inter', system-ui, sans-serif;
+    .planner-strip-head h2 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .planner-strip-head p {
       font-size: 15px;
       color: var(--muted);
+    }
+    .planner-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    .planner-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: transform .25s, box-shadow .25s;
+      position: relative;
+      cursor: pointer;
+    }
+    .planner-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .planner-photo-wrap {
+      position: relative;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+    }
+    .planner-photo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .35s;
+    }
+    .planner-card:hover .planner-photo { transform: scale(1.04); }
+    .planner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 50%, transparent 100%);
+    }
+    .planner-status {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(8px);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: -0.01em;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .planner-status.coming {
+      color: var(--muted);
+    }
+    .planner-body {
+      padding: 16px 18px 20px;
+    }
+    .planner-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .planner-card p {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
     }
 
     /* ══════════════════════════════
@@ -819,7 +879,10 @@
       .feature-row.reverse { direction: ltr; }
       .feature-row.reverse .feature-text { order: -1; }
       .nav-links a:not(.nav-cta) { display: none; }
-      .trust-row { gap: 24px; }
+      .planner-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 520px) {
+      .planner-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -933,16 +996,70 @@
   </div>
 </section>
 
-<!-- ════ TRUST ════ -->
-<section class="trust">
+<!-- ════ PLANLEGGERE ════ -->
+<section class="planner-strip">
   <div class="container">
-    <div class="trust-label">Brukt av norske familier i</div>
-    <div class="trust-row">
-      <div class="trust-item">Oslo</div>
-      <div class="trust-item">Bergen</div>
-      <div class="trust-item">Trondheim</div>
-      <div class="trust-item">Stavanger</div>
-      <div class="trust-item">Tromsø</div>
+    <div class="planner-strip-head">
+      <h2>Bygget for livets <em>store prosjekter</em></h2>
+      <p>Velg planleggeren som passer ditt prosjekt — alle har samme kraftige verktøy, tilpasset sjangeren.</p>
+    </div>
+
+    <div class="planner-grid">
+      <a class="planner-card" href="/app/oppussing/">
+        <div class="planner-photo-wrap">
+          <img class="planner-photo"
+               src="https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?w=600&q=80&auto=format&fit=crop"
+               alt="Oppussing — lyst hjem under arbeid" loading="lazy" />
+          <div class="planner-overlay"></div>
+          <span class="planner-status">Tilgjengelig</span>
+        </div>
+        <div class="planner-body">
+          <h3>🏠 Oppussing</h3>
+          <p>Tavle, tidsplan, budsjett og leverandører — fra tegning til siste fugemasse.</p>
+        </div>
+      </a>
+
+      <a class="planner-card" href="/app/flytting/">
+        <div class="planner-photo-wrap">
+          <img class="planner-photo"
+               src="https://images.unsplash.com/photo-1600518464441-9154a4dea21b?w=600&q=80&auto=format&fit=crop"
+               alt="Flytting — esker i en lys leilighet" loading="lazy" />
+          <div class="planner-overlay"></div>
+          <span class="planner-status coming">Kommer snart</span>
+        </div>
+        <div class="planner-body">
+          <h3>📦 Flytting</h3>
+          <p>Pakkelister, romfordeling, adressendring og oppsigelser — uten papirhauger.</p>
+        </div>
+      </a>
+
+      <a class="planner-card" href="/app/hytte/">
+        <div class="planner-photo-wrap">
+          <img class="planner-photo"
+               src="https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=600&q=80&auto=format&fit=crop"
+               alt="Hytte — norsk landskap med tre og fjell" loading="lazy" />
+          <div class="planner-overlay"></div>
+          <span class="planner-status coming">Kommer snart</span>
+        </div>
+        <div class="planner-body">
+          <h3>🏔 Hytte</h3>
+          <p>Vedlikehold, naboavtaler, vannlekkasjer og sesongsjekklister på ett sted.</p>
+        </div>
+      </a>
+
+      <a class="planner-card" href="/app/bryllup/">
+        <div class="planner-photo-wrap">
+          <img class="planner-photo"
+               src="https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80&auto=format&fit=crop"
+               alt="Bryllup — bord dekket med blomster" loading="lazy" />
+          <div class="planner-overlay"></div>
+          <span class="planner-status coming">Kommer snart</span>
+        </div>
+        <div class="planner-body">
+          <h3>💍 Bryllup</h3>
+          <p>Gjestelister, sitteplaner, leverandøravtaler og budsjett — den store dagen, samlet.</p>
+        </div>
+      </a>
     </div>
   </div>
 </section>
