@@ -1537,8 +1537,8 @@
     // Hero starter blurret og blir skarpere når brukeren scroller
     if (cinema && cinemaBg) {
       const h = cinema.offsetHeight;
-      // Skarpt etter ~25 % av seksjonen for en raskere reveal
-      const progress = Math.min(1, Math.max(0, (y / h) * 4));
+      // Skarpt etter ~15 % av seksjonen
+      const progress = Math.min(1, Math.max(0, (y / h) * 6.5));
       const maxBlur = 7;
       cinemaBg.style.filter = `blur(${maxBlur * (1 - progress)}px)`;
     }
