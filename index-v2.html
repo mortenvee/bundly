@@ -6,7 +6,7 @@
   <title>Bundly — Prototype v2</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     /* ══════════════════════════════
        DESIGN TOKENS — varm scandi
@@ -55,7 +55,7 @@
 
     /* ── Display font ── */
     .serif {
-      font-family: 'Fraunces', 'Georgia', serif;
+      font-family: 'Inter', system-ui, sans-serif;
       font-feature-settings: "ss01";
       letter-spacing: -0.02em;
     }
@@ -86,10 +86,10 @@
       height: 64px;
     }
     .nav-logo {
-      font-family: 'Fraunces', serif;
-      font-weight: 600;
-      font-size: 22px;
-      letter-spacing: -0.02em;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.03em;
       color: var(--text);
     }
     .nav-logo span { color: var(--accent); }
@@ -147,17 +147,17 @@
       display: block;
     }
     .hero h1 {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(44px, 6vw, 76px);
-      font-weight: 500;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: clamp(44px, 6.5vw, 80px);
+      font-weight: 700;
       line-height: 1.02;
-      letter-spacing: -0.025em;
+      letter-spacing: -0.045em;
       margin-bottom: 24px;
       color: var(--text);
     }
     .hero h1 em {
       font-style: normal;
-      font-weight: 500;
+      font-weight: 700;
       color: var(--accent);
     }
     .hero-sub {
@@ -299,8 +299,10 @@
       margin-left: 6px;
     }
     .demo-modal-placeholder p {
-      font-family: 'Fraunces', serif;
-      font-size: 18px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
       color: rgba(255,255,255,0.85);
     }
     .demo-modal-placeholder small {
@@ -362,9 +364,10 @@
       transform: rotate(-2deg);
     }
     .hero-card-head {
-      font-family: 'Fraunces', serif;
-      font-size: 14px;
-      font-weight: 600;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       margin-bottom: 8px;
       display: flex;
       align-items: center;
@@ -414,10 +417,10 @@
       flex-wrap: wrap;
     }
     .trust-item {
-      font-family: 'Fraunces', serif;
-      font-size: 17px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 15px;
       color: var(--muted);
-      font-weight: 500;
+      font-weight: 600;
       letter-spacing: -0.01em;
     }
 
@@ -442,17 +445,17 @@
       margin-bottom: 16px;
     }
     .section-head h2 {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(32px, 4.5vw, 48px);
-      font-weight: 500;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: clamp(32px, 4.5vw, 50px);
+      font-weight: 700;
       line-height: 1.1;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.035em;
       margin-bottom: 18px;
     }
     .section-head h2 em {
       font-style: normal;
       color: var(--accent);
-      font-weight: 500;
+      font-weight: 700;
     }
     .section-head p {
       font-size: 17px;
@@ -496,11 +499,11 @@
       margin-bottom: 14px;
     }
     .planner-card h3 {
-      font-family: 'Fraunces', serif;
-      font-size: 24px;
-      font-weight: 500;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
       margin-bottom: 10px;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.025em;
     }
     .planner-card p {
       color: var(--muted);
