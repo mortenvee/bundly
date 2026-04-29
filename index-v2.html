@@ -163,7 +163,7 @@
       will-change: filter;
       transition: filter .1s linear;
       /* Start blurret — JS reduserer blur etter hvert som brukeren scroller */
-      filter: blur(14px);
+      filter: blur(7px);
     }
     /* Plassholder for fremtidig video — bytt .cinema-bg div ut med <video> ved behov */
     .cinema-overlay {
@@ -1537,9 +1537,9 @@
     // Hero starter blurret og blir skarpere når brukeren scroller
     if (cinema && cinemaBg) {
       const h = cinema.offsetHeight;
-      // Nå skarpt etter ~50 % av seksjonen for en raskere "reveal"
-      const progress = Math.min(1, Math.max(0, (y / h) * 2));
-      const maxBlur = 14;
+      // Skarpt etter ~25 % av seksjonen for en raskere reveal
+      const progress = Math.min(1, Math.max(0, (y / h) * 4));
+      const maxBlur = 7;
       cinemaBg.style.filter = `blur(${maxBlur * (1 - progress)}px)`;
     }
     ticking = false;
