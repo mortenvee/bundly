@@ -1,4 +1,14 @@
 /* ════════════════════════════════════
+   THEME TOGGLE (lys/mørk)
+════════════════════════════════════ */
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('bundly-theme', next); } catch (e) {}
+}
+
+/* ════════════════════════════════════
    TAB SYSTEM
 ════════════════════════════════════ */
 function showTab(name) {

@@ -8,6 +8,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="theme-light.css">
+  <!-- Sett tema før render for å unngå flash -->
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('bundly-theme');
+        var theme = saved || 'light'; // default: light
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <!-- jsPDF + AutoTable for PDF-eksport -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -66,6 +79,9 @@
   <div class="header-actions">
     <a href="/app/" class="back-btn" title="Tilbake til alle planleggere">← Planleggere</a>
     <span id="userEmail" style="font-size:12px;color:#64748b;margin-right:4px;"></span>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Bytt tema (lys/mørk)" aria-label="Bytt tema">
+      <span class="icon-sun">☀</span><span class="icon-moon">☾</span>
+    </button>
     <button class="data-btn" onclick="openInviteModal()" title="Inviter noen til prosjektet">
       👥 Inviter
     </button>
