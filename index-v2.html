@@ -545,53 +545,245 @@
       color: var(--muted);
       line-height: 1.6;
     }
-    .planner-grid {
+    /* ── Feature spotlights ── */
+    .feature-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+      margin-bottom: 96px;
     }
-    .planner-card {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      border: 1px solid var(--border);
-      transition: transform .25s, box-shadow .25s;
-    }
-    .planner-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-    }
-    .planner-photo {
-      aspect-ratio: 16/10;
-      object-fit: cover;
-      width: 100%;
-    }
-    .planner-body {
-      padding: 28px 30px 32px;
-    }
-    .planner-tag {
+    .feature-row:last-child { margin-bottom: 0; }
+    .feature-row.reverse { direction: rtl; }
+    .feature-row.reverse > * { direction: ltr; }
+    .feature-text { max-width: 440px; }
+    .feature-tag {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      font-weight: 500;
+      font-weight: 600;
       color: var(--accent);
       background: var(--accent-soft);
-      padding: 4px 10px;
+      padding: 5px 12px;
       border-radius: 999px;
+      margin-bottom: 16px;
+      letter-spacing: 0.02em;
+    }
+    .feature-text h3 {
+      font-size: clamp(26px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+    .feature-text p {
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+    .feature-bullets {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .feature-bullets li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-soft);
+    }
+    .feature-bullets li::before {
+      content: '';
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 3px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8L7 11.5L12.5 5' stroke='%231e5b5e' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-size: 12px;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* ── Mock variants for feature mockups ── */
+    .mock-shell {
+      background: var(--surface);
+      border-radius: 14px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .mock-shell-bar {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px;
+      background: #f5f3ee;
+      border-bottom: 1px solid var(--border);
+    }
+    .mock-shell-bar .dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: rgba(0,0,0,0.12);
+    }
+
+    /* Gantt mock */
+    .mock-gantt {
+      padding: 18px;
+    }
+    .mock-gantt-head {
+      display: flex; justify-content: space-between;
+      font-size: 10px; color: var(--muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .mock-gantt-row {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .mock-gantt-label {
+      font-size: 11px;
+      color: var(--text-soft);
+      font-weight: 500;
+      text-align: right;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .mock-gantt-track {
+      position: relative;
+      height: 22px;
+      background: #fbfaf6;
+      border-radius: 5px;
+    }
+    .mock-gantt-bar {
+      position: absolute;
+      top: 4px; bottom: 4px;
+      border-radius: 4px;
+    }
+    .mock-gantt-today {
+      position: absolute;
+      top: -2px; bottom: -2px;
+      width: 1px;
+      background: rgba(200,80,80,0.55);
+    }
+
+    /* Budget mock */
+    .mock-budget { padding: 18px; }
+    .mock-budget-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
       margin-bottom: 14px;
     }
-    .planner-card h3 {
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      letter-spacing: -0.025em;
+    .mock-stat {
+      background: #fbfaf6;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
     }
-    .planner-card p {
+    .mock-stat-val {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .mock-stat-val.accent { color: var(--accent); }
+    .mock-stat-lbl {
+      font-size: 10px;
       color: var(--muted);
-      font-size: 15px;
-      line-height: 1.6;
+      margin-top: 1px;
+    }
+    .mock-budget-bar {
+      height: 8px;
+      background: #f0ede5;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .mock-budget-bar-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      background: var(--accent);
+      border-radius: 999px;
+    }
+    .mock-budget-rows {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .mock-budget-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+      font-size: 11px;
+      padding: 7px 10px;
+      background: #fbfaf6;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      align-items: center;
+    }
+    .mock-budget-row .name { color: var(--text); font-weight: 500; }
+    .mock-budget-row .num { color: var(--text-soft); font-variant-numeric: tabular-nums; }
+    .mock-budget-row .pill {
+      font-size: 9px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    /* Dashboard mock */
+    .mock-dash { padding: 18px; }
+    .mock-dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .mock-widget {
+      background: #fbfaf6;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .mock-widget-title {
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .mock-widget-big {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .mock-widget-big.accent { color: var(--accent); }
+    .mock-widget-small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .mock-list-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0;
+      font-size: 11px;
+      color: var(--text-soft);
+      border-top: 1px solid var(--border);
+    }
+    .mock-list-row:first-of-type { border-top: 0; }
+    .mock-list-row .swatch {
+      width: 6px; height: 6px; border-radius: 50%;
+      flex-shrink: 0;
     }
 
     /* ══════════════════════════════
@@ -618,9 +810,14 @@
         grid-template-columns: 1fr;
         gap: 56px;
       }
-      .hero-visual { margin: 0 auto; max-width: 360px; }
-      .hero-card { right: -16px; width: 180px; }
-      .planner-grid { grid-template-columns: 1fr; }
+      .hero-visual { margin: 0 auto; max-width: 480px; }
+      .feature-row {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        margin-bottom: 64px;
+      }
+      .feature-row.reverse { direction: ltr; }
+      .feature-row.reverse .feature-text { order: -1; }
       .nav-links a:not(.nav-cta) { display: none; }
       .trust-row { gap: 24px; }
     }
@@ -750,60 +947,236 @@
   </div>
 </section>
 
-<!-- ════ PLANLEGGERE ════ -->
+<!-- ════ FEATURE-TUR ════ -->
 <section class="planners" id="planleggere">
   <div class="container">
     <div class="section-head">
-      <div class="section-eyebrow">Fire planleggere</div>
-      <h2 class="serif">Ett verktøy for <em>livets store øyeblikk</em></h2>
-      <p>Hvert prosjekt er bygget for sin sjanger. Samme app, fire spesialiseringer.</p>
+      <div class="section-eyebrow">Slik fungerer det</div>
+      <h2>Alt dere trenger, samlet på ett sted</h2>
+      <p>Tavle, tidsplan, budsjett, leverandører og diskusjon — bygget for å spille sammen.</p>
     </div>
 
-    <div class="planner-grid">
-      <article class="planner-card">
-        <img class="planner-photo"
-             src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80&auto=format&fit=crop"
-             alt="Lyst kjøkken med åpne hyller" />
-        <div class="planner-body">
-          <span class="planner-tag">🏠 Oppussing</span>
-          <h3>Hjem under arbeid</h3>
-          <p>Tavle, Gantt, budsjett, leverandører og fremdriftsbilder — fra første tegning til siste fugemasse.</p>
+    <!-- Feature 1: Tavle -->
+    <div class="feature-row">
+      <div class="feature-text">
+        <span class="feature-tag">🗂 Tavle</span>
+        <h3>Hold oversikt fra idé til ferdig</h3>
+        <p>Dra og slipp oppgaver mellom kolonner som «Planlagt», «Pågår» og «Ferdig». Synkes live mellom alle som er med på prosjektet.</p>
+        <ul class="feature-bullets">
+          <li>Etiketter for budsjett, materialer og håndverker</li>
+          <li>Frister, ansvarlig person og vedlegg per kort</li>
+          <li>Realtime-oppdateringer mellom enheter</li>
+        </ul>
+      </div>
+      <div>
+        <div class="mock-shell">
+          <div class="mock-shell-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+          <div class="mock-body">
+            <div class="mock-board">
+              <div class="mock-col">
+                <div class="mock-col-head"><span class="mock-col-dot" style="background:#b8893a"></span> Planlagt</div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Bytte vinduer i stua</div>
+                  <div class="mock-card-meta"><span class="mock-pill budget">💰 Budsjett</span></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Bestille kjøkken</div>
+                  <div class="mock-card-meta"><span class="mock-pill due">📅 24. mai</span></div>
+                </div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-head"><span class="mock-col-dot" style="background:#1e5b5e"></span> Pågår</div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Flislegge bad</div>
+                  <div class="mock-card-meta"><span class="mock-pill material">🧱 Material</span></div>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-title">Male soverom</div>
+                  <div class="mock-card-meta">Tor</div>
+                </div>
+              </div>
+              <div class="mock-col">
+                <div class="mock-col-head"><span class="mock-col-dot" style="background:#7a8b7a"></span> Ferdig</div>
+                <div class="mock-card" style="opacity:0.65">
+                  <div class="mock-card-title">Rive vegg</div>
+                  <div class="mock-card-meta">✓ 18. apr</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </article>
-
-      <article class="planner-card">
-        <img class="planner-photo"
-             src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80&auto=format&fit=crop"
-             alt="Bord dekket til bryllup med blomster" />
-        <div class="planner-body">
-          <span class="planner-tag">💍 Bryllup</span>
-          <h3>Den store dagen</h3>
-          <p>Gjestelister, sitteplaner, leverandøravtaler og budsjett samlet — så dere slipper å holde det i hodet.</p>
-        </div>
-      </article>
-
-      <article class="planner-card">
-        <img class="planner-photo"
-             src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80&auto=format&fit=crop"
-             alt="Fjellutsikt med kart og kaffe" />
-        <div class="planner-body">
-          <span class="planner-tag">✈️ Ferie</span>
-          <h3>Drømmeturen</h3>
-          <p>Reiserute, pakkelister, bookingbekreftelser og lokale favoritter — alt klart før dere setter dere på flyet.</p>
-        </div>
-      </article>
-
-      <article class="planner-card">
-        <img class="planner-photo"
-             src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80&auto=format&fit=crop"
-             alt="Flytteesker i en lys leilighet" />
-        <div class="planner-body">
-          <span class="planner-tag">📦 Flytting</span>
-          <h3>Til nytt hjem</h3>
-          <p>Romfordeling, oppsigelse, adressendringer og pakkelister — uten papirhaugen på kjøkkenbordet.</p>
-        </div>
-      </article>
+      </div>
     </div>
+
+    <!-- Feature 2: Gantt -->
+    <div class="feature-row reverse">
+      <div class="feature-text">
+        <span class="feature-tag">📅 Gantt</span>
+        <h3>Se tidslinjen for hele prosjektet</h3>
+        <p>Få overblikk over når ting starter, hvor lenge de varer, og hvilke milepæler som nærmer seg. Perfekt når flere oppgaver overlapper.</p>
+        <ul class="feature-bullets">
+          <li>Automatisk lagde stolper fra start- og sluttdato</li>
+          <li>Milepæler med farger og dato-linjer</li>
+          <li>«I dag»-linje som flytter seg automatisk</li>
+        </ul>
+      </div>
+      <div>
+        <div class="mock-shell">
+          <div class="mock-shell-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+          <div class="mock-gantt">
+            <div class="mock-gantt-head"><span>April</span><span>Mai</span><span>Juni</span></div>
+            <div class="mock-gantt-row">
+              <div class="mock-gantt-label">Rive vegg</div>
+              <div class="mock-gantt-track">
+                <div class="mock-gantt-bar" style="left:2%;width:18%;background:#7a8b7a;opacity:0.85"></div>
+              </div>
+            </div>
+            <div class="mock-gantt-row">
+              <div class="mock-gantt-label">Bytte vinduer</div>
+              <div class="mock-gantt-track">
+                <div class="mock-gantt-bar" style="left:14%;width:24%;background:#b8893a;opacity:0.85"></div>
+              </div>
+            </div>
+            <div class="mock-gantt-row">
+              <div class="mock-gantt-label">Flislegge bad</div>
+              <div class="mock-gantt-track">
+                <div class="mock-gantt-bar" style="left:28%;width:32%;background:#1e5b5e"></div>
+                <div class="mock-gantt-today" style="left:42%"></div>
+              </div>
+            </div>
+            <div class="mock-gantt-row">
+              <div class="mock-gantt-label">Bestille kjøkken</div>
+              <div class="mock-gantt-track">
+                <div class="mock-gantt-bar" style="left:48%;width:14%;background:#b8893a;opacity:0.85"></div>
+                <div class="mock-gantt-today" style="left:42%"></div>
+              </div>
+            </div>
+            <div class="mock-gantt-row">
+              <div class="mock-gantt-label">Male stue</div>
+              <div class="mock-gantt-track">
+                <div class="mock-gantt-bar" style="left:62%;width:22%;background:#1e5b5e;opacity:0.7"></div>
+                <div class="mock-gantt-today" style="left:42%"></div>
+              </div>
+            </div>
+            <div class="mock-gantt-row">
+              <div class="mock-gantt-label">Innflytting</div>
+              <div class="mock-gantt-track">
+                <div class="mock-gantt-bar" style="left:88%;width:10px;height:10px;border-radius:2px;transform:rotate(45deg);background:#c97550;top:6px"></div>
+                <div class="mock-gantt-today" style="left:42%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 3: Budsjett -->
+    <div class="feature-row">
+      <div class="feature-text">
+        <span class="feature-tag">💰 Budsjett</span>
+        <h3>Hold styr på krona — hver eneste krone</h3>
+        <p>Sett en total pott, fordel den på poster, og se i sanntid hvor mye som er estimert, betalt og igjen. Med kakediagram og avviksvarsler.</p>
+        <ul class="feature-bullets">
+          <li>Importer fra PDF, CSV eller Excel automatisk</li>
+          <li>Egne kategorier med farger og emoji</li>
+          <li>Last opp kvitteringer direkte på posten</li>
+        </ul>
+      </div>
+      <div>
+        <div class="mock-shell">
+          <div class="mock-shell-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+          <div class="mock-budget">
+            <div class="mock-budget-summary">
+              <div class="mock-stat">
+                <div class="mock-stat-val accent">500 000 kr</div>
+                <div class="mock-stat-lbl">Total pott</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-val">342 800</div>
+                <div class="mock-stat-lbl">Estimert</div>
+              </div>
+              <div class="mock-stat">
+                <div class="mock-stat-val">157 200</div>
+                <div class="mock-stat-lbl">Gjenstår</div>
+              </div>
+            </div>
+            <div class="mock-budget-bar">
+              <div class="mock-budget-bar-fill" style="width:68%"></div>
+            </div>
+            <div class="mock-budget-rows">
+              <div class="mock-budget-row">
+                <span class="name">🚿 Bad — fliser &amp; rør</span>
+                <span class="pill" style="background:rgba(30,91,94,0.12);color:#1e5b5e">Pågår</span>
+                <span class="num">98 400 kr</span>
+              </div>
+              <div class="mock-budget-row">
+                <span class="name">🍳 Kjøkken — innredning</span>
+                <span class="pill" style="background:rgba(184,137,58,0.18);color:#8a6624">Bestilt</span>
+                <span class="num">142 000 kr</span>
+              </div>
+              <div class="mock-budget-row">
+                <span class="name">🪟 Vinduer — stue</span>
+                <span class="pill" style="background:rgba(122,139,122,0.2);color:#4a5d4a">Betalt</span>
+                <span class="num">62 400 kr</span>
+              </div>
+              <div class="mock-budget-row">
+                <span class="name">🎨 Maling alle rom</span>
+                <span class="pill" style="background:rgba(184,137,58,0.18);color:#8a6624">Planlagt</span>
+                <span class="num">18 000 kr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature 4: Dashboard -->
+    <div class="feature-row reverse">
+      <div class="feature-text">
+        <span class="feature-tag">🏠 Dashboard</span>
+        <h3>Få helheten på ett blikk</h3>
+        <p>Når dagen er travel, gir dashboardet deg det viktigste: budsjettstatus, kommende frister, siste aktivitet og fremdrift — uten å klikke deg gjennom faner.</p>
+        <ul class="feature-bullets">
+          <li>Realtime-status fra alle deler av prosjektet</li>
+          <li>Kommende frister, sortert etter dato</li>
+          <li>Siste aktivitet fra alle teammedlemmer</li>
+        </ul>
+      </div>
+      <div>
+        <div class="mock-shell">
+          <div class="mock-shell-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+          <div class="mock-dash">
+            <div class="mock-dash-grid">
+              <div class="mock-widget">
+                <div class="mock-widget-title">💰 Budsjett</div>
+                <div class="mock-widget-big accent">500 000</div>
+                <div class="mock-widget-small">68 % brukt · 157 200 igjen</div>
+              </div>
+              <div class="mock-widget">
+                <div class="mock-widget-title">🗂 Tavle</div>
+                <div class="mock-widget-big">7 kort</div>
+                <div class="mock-widget-small">2 pågår · 3 ferdig</div>
+              </div>
+              <div class="mock-widget" style="grid-column:span 2">
+                <div class="mock-widget-title">⏰ Kommende frister</div>
+                <div class="mock-list-row"><span class="swatch" style="background:#c97550"></span> Bestille kjøkken — om 4 dager</div>
+                <div class="mock-list-row"><span class="swatch" style="background:#b8893a"></span> Møte med rørlegger — om 6 dager</div>
+                <div class="mock-list-row"><span class="swatch" style="background:#1e5b5e"></span> Levering vinduer — om 12 dager</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </section>
 
