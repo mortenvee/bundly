@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bundly — Prototype v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
+  <style>
+    /* ══════════════════════════════
+       DESIGN TOKENS — varm scandi
+    ══════════════════════════════ */
+    :root {
+      /* Surfaces */
+      --bg:        #fafaf7;
+      --bg-warm:   #f3f0e8;
+      --surface:   #ffffff;
+
+      /* Text */
+      --text:      #1a1a1a;
+      --text-soft: #3d3d3d;
+      --muted:     #6b6b6b;
+      --muted-2:   #9a9a96;
+
+      /* Accent — dyp teal */
+      --accent:    #1e5b5e;
+      --accent-2:  #0f3d3f;
+      --accent-soft: #e6efef;
+
+      /* Lines */
+      --border:    rgba(0,0,0,0.08);
+      --border-2:  rgba(0,0,0,0.14);
+
+      /* Misc */
+      --radius:    14px;
+      --radius-lg: 22px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.08);
+    }
+
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      font-feature-settings: "ss01", "cv11";
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+
+    /* ── Display font ── */
+    .serif {
+      font-family: 'Fraunces', 'Georgia', serif;
+      font-feature-settings: "ss01";
+      letter-spacing: -0.02em;
+    }
+
+    /* ── Layout ── */
+    .container {
+      width: 100%;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ══════════════════════════════
+       NAVBAR
+    ══════════════════════════════ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      background: rgba(250,250,247,0.85);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: 'Fraunces', serif;
+      font-weight: 600;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: color .15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      padding: 9px 18px;
+      background: var(--accent);
+      color: #fff !important;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background .15s, transform .15s;
+    }
+    .nav-cta:hover { background: var(--accent-2); transform: translateY(-1px); }
+
+    /* ══════════════════════════════
+       HERO
+    ══════════════════════════════ */
+    .hero {
+      padding: 140px 0 80px;
+      position: relative;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 24px; height: 1px;
+      background: var(--accent);
+      display: block;
+    }
+    .hero h1 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(44px, 6vw, 76px);
+      font-weight: 500;
+      line-height: 1.02;
+      letter-spacing: -0.025em;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .hero h1 em {
+      font-style: italic;
+      font-weight: 400;
+      color: var(--accent);
+    }
+    .hero-sub {
+      font-size: 19px;
+      color: var(--text-soft);
+      line-height: 1.6;
+      max-width: 460px;
+      margin-bottom: 36px;
+    }
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 26px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all .2s;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: var(--accent-2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(30,91,94,0.25);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-2);
+    }
+    .btn-ghost:hover {
+      background: var(--surface);
+      border-color: var(--text);
+    }
+    .hero-fine {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero-fine span { margin: 0 6px; opacity: 0.4; }
+
+    /* Hero image stack */
+    .hero-visual {
+      position: relative;
+      aspect-ratio: 4/5;
+      max-width: 460px;
+      margin-left: auto;
+    }
+    .hero-photo {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+    .hero-photo-tag {
+      position: absolute;
+      bottom: 18px; left: 18px;
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(8px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-photo-tag .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Floating mini-card with app preview */
+    .hero-card {
+      position: absolute;
+      bottom: -32px;
+      right: -48px;
+      width: 220px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+      transform: rotate(-2deg);
+    }
+    .hero-card-head {
+      font-family: 'Fraunces', serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-card-head::before {
+      content: '';
+      width: 8px; height: 8px; border-radius: 2px;
+      background: var(--accent);
+    }
+    .hero-card-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-soft);
+    }
+    .hero-card-row::before {
+      content: '✓';
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════
+       SOSIAL BEVIS / TRUST
+    ══════════════════════════════ */
+    .trust {
+      padding: 64px 0;
+      border-top: 1px solid var(--border);
+    }
+    .trust-label {
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .trust-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 56px;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      font-family: 'Fraunces', serif;
+      font-size: 17px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    /* ══════════════════════════════
+       FEATURES — life events
+    ══════════════════════════════ */
+    .planners {
+      padding: 96px 0;
+      background: var(--bg-warm);
+    }
+    .section-head {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 64px;
+    }
+    .section-eyebrow {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    .section-head h2 {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(32px, 4.5vw, 48px);
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 18px;
+    }
+    .section-head h2 em {
+      font-style: italic;
+      color: var(--accent);
+      font-weight: 400;
+    }
+    .section-head p {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .planner-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .planner-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      transition: transform .25s, box-shadow .25s;
+    }
+    .planner-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .planner-photo {
+      aspect-ratio: 16/10;
+      object-fit: cover;
+      width: 100%;
+    }
+    .planner-body {
+      padding: 28px 30px 32px;
+    }
+    .planner-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .planner-card h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 24px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .planner-card p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════════
+       FOOTER (lett)
+    ══════════════════════════════ */
+    footer {
+      padding: 64px 0 40px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+      text-align: center;
+    }
+    footer .nav-logo { display: inline-block; margin-bottom: 12px; }
+    footer p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ══════════════════════════════
+       RESPONSIV
+    ══════════════════════════════ */
+    @media (max-width: 880px) {
+      .hero { padding: 110px 0 60px; }
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 56px;
+      }
+      .hero-visual { margin: 0 auto; max-width: 360px; }
+      .hero-card { right: -16px; width: 180px; }
+      .planner-grid { grid-template-columns: 1fr; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .trust-row { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════ NAV ════ -->
+<nav>
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo"><span>✦</span> Bundly</a>
+    <div class="nav-links">
+      <a href="#planleggere">Planleggere</a>
+      <a href="#priser">Priser</a>
+      <a href="#blogg">Blogg</a>
+      <a href="/app/" class="nav-cta">Logg inn</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════ HERO ════ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-eyebrow">Nå i beta — gratis å prøve</div>
+        <h1 class="serif">
+          Planlegg det som <em>betyr mest</em> i livet.
+        </h1>
+        <p class="hero-sub">
+          Oppussingen, bryllupet, ferien eller flyttingen. Bundly samler alt på ett sted, så dere kan fokusere på det som virkelig betyr noe — sammen.
+        </p>
+        <div class="hero-ctas">
+          <a href="/app/" class="btn btn-primary">Kom i gang gratis</a>
+          <a href="#demo" class="btn btn-ghost">Se hvordan det fungerer →</a>
+        </div>
+        <p class="hero-fine">
+          Ingen kort kreves <span>·</span> 7 dager gratis <span>·</span> Avbestill når som helst
+        </p>
+      </div>
+
+      <div class="hero-visual">
+        <!-- Plassholder-bilde fra Unsplash (varmt skandinavisk hjem under oppussing) -->
+        <img class="hero-photo"
+             src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80&auto=format&fit=crop"
+             alt="Lyst, skandinavisk hjem under oppussing" />
+        <div class="hero-photo-tag">
+          <span class="dot"></span>
+          Anniken &amp; Tor — bad-renovering
+        </div>
+        <div class="hero-card">
+          <div class="hero-card-head">Pågår denne uken</div>
+          <div class="hero-card-row">Bytte vinduer</div>
+          <div class="hero-card-row">Flislegge bad</div>
+          <div class="hero-card-row">Bestille kjøkken</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ TRUST ════ -->
+<section class="trust">
+  <div class="container">
+    <div class="trust-label">Brukt av norske familier i</div>
+    <div class="trust-row">
+      <div class="trust-item">Oslo</div>
+      <div class="trust-item">Bergen</div>
+      <div class="trust-item">Trondheim</div>
+      <div class="trust-item">Stavanger</div>
+      <div class="trust-item">Tromsø</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ PLANLEGGERE ════ -->
+<section class="planners" id="planleggere">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-eyebrow">Fire planleggere</div>
+      <h2 class="serif">Ett verktøy for <em>livets store øyeblikk</em></h2>
+      <p>Hvert prosjekt er bygget for sin sjanger. Samme app, fire spesialiseringer.</p>
+    </div>
+
+    <div class="planner-grid">
+      <article class="planner-card">
+        <img class="planner-photo"
+             src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80&auto=format&fit=crop"
+             alt="Lyst kjøkken med åpne hyller" />
+        <div class="planner-body">
+          <span class="planner-tag">🏠 Oppussing</span>
+          <h3>Hjem under arbeid</h3>
+          <p>Tavle, Gantt, budsjett, leverandører og fremdriftsbilder — fra første tegning til siste fugemasse.</p>
+        </div>
+      </article>
+
+      <article class="planner-card">
+        <img class="planner-photo"
+             src="https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80&auto=format&fit=crop"
+             alt="Bord dekket til bryllup med blomster" />
+        <div class="planner-body">
+          <span class="planner-tag">💍 Bryllup</span>
+          <h3>Den store dagen</h3>
+          <p>Gjestelister, sitteplaner, leverandøravtaler og budsjett samlet — så dere slipper å holde det i hodet.</p>
+        </div>
+      </article>
+
+      <article class="planner-card">
+        <img class="planner-photo"
+             src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&q=80&auto=format&fit=crop"
+             alt="Fjellutsikt med kart og kaffe" />
+        <div class="planner-body">
+          <span class="planner-tag">✈️ Ferie</span>
+          <h3>Drømmeturen</h3>
+          <p>Reiserute, pakkelister, bookingbekreftelser og lokale favoritter — alt klart før dere setter dere på flyet.</p>
+        </div>
+      </article>
+
+      <article class="planner-card">
+        <img class="planner-photo"
+             src="https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=800&q=80&auto=format&fit=crop"
+             alt="Flytteesker i en lys leilighet" />
+        <div class="planner-body">
+          <span class="planner-tag">📦 Flytting</span>
+          <h3>Til nytt hjem</h3>
+          <p>Romfordeling, oppsigelse, adressendringer og pakkelister — uten papirhaugen på kjøkkenbordet.</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <div class="container">
+    <a href="/" class="nav-logo"><span>✦</span> Bundly</a>
+    <p>Laget i Norge — for livets store prosjekter.</p>
+  </div>
+</footer>
+
+</body>
+</html>
