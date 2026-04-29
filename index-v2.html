@@ -156,8 +156,8 @@
       color: var(--text);
     }
     .hero h1 em {
-      font-style: italic;
-      font-weight: 400;
+      font-style: normal;
+      font-weight: 500;
       color: var(--accent);
     }
     .hero-sub {
@@ -205,6 +205,109 @@
       background: var(--surface);
       border-color: var(--text);
     }
+    /* Demo-knapp med play-ikon */
+    .btn-demo {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-2);
+      padding-left: 8px;
+    }
+    .btn-demo:hover {
+      background: var(--surface);
+      border-color: var(--text);
+    }
+    .btn-demo .play {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+    .btn-demo .play::before {
+      content: '';
+      display: block;
+      width: 0; height: 0;
+      border-left: 8px solid #fff;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      margin-left: 2px;
+    }
+
+    /* Demo-modal */
+    .demo-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(20,20,18,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: fadeIn .2s ease;
+    }
+    .demo-modal-overlay.show { display: flex; }
+    .demo-modal {
+      width: 100%;
+      max-width: 980px;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+    .demo-modal-close {
+      position: absolute;
+      top: -42px; right: 0;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 10px;
+    }
+    .demo-modal-placeholder {
+      position: absolute; inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      gap: 12px;
+      background: linear-gradient(135deg, #1a1a1a, #2a2a28);
+    }
+    .demo-modal-placeholder .play-big {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .demo-modal-placeholder .play-big::before {
+      content: '';
+      display: block;
+      width: 0; height: 0;
+      border-left: 22px solid #fff;
+      border-top: 13px solid transparent;
+      border-bottom: 13px solid transparent;
+      margin-left: 6px;
+    }
+    .demo-modal-placeholder p {
+      font-family: 'Fraunces', serif;
+      font-size: 18px;
+      color: rgba(255,255,255,0.85);
+    }
+    .demo-modal-placeholder small {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+    }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
     .hero-fine {
       font-size: 13px;
       color: var(--muted);
@@ -347,9 +450,9 @@
       margin-bottom: 18px;
     }
     .section-head h2 em {
-      font-style: italic;
+      font-style: normal;
       color: var(--accent);
-      font-weight: 400;
+      font-weight: 500;
     }
     .section-head p {
       font-size: 17px;
@@ -466,7 +569,10 @@
         </p>
         <div class="hero-ctas">
           <a href="/app/" class="btn btn-primary">Kom i gang gratis</a>
-          <a href="#demo" class="btn btn-ghost">Se hvordan det fungerer →</a>
+          <button class="btn btn-demo" onclick="openDemo()">
+            <span class="play"></span>
+            Se 2-min demo
+          </button>
         </div>
         <p class="hero-fine">
           Ingen kort kreves <span>·</span> 7 dager gratis <span>·</span> Avbestill når som helst
@@ -563,6 +669,33 @@
     </div>
   </div>
 </section>
+
+<!-- ════ DEMO MODAL ════ -->
+<div class="demo-modal-overlay" id="demoOverlay" onclick="if(event.target===this)closeDemo()">
+  <div class="demo-modal">
+    <button class="demo-modal-close" onclick="closeDemo()" aria-label="Lukk">×</button>
+    <!-- Bytt ut placeholder med <iframe src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1" ...> når video er klar -->
+    <div class="demo-modal-placeholder">
+      <span class="play-big"></span>
+      <p>Demovideoen kommer snart</p>
+      <small>Bytt ut denne med en YouTube/Vimeo-iframe når videoen er klar</small>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openDemo() {
+    document.getElementById('demoOverlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDemo() {
+    document.getElementById('demoOverlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDemo();
+  });
+</script>
 
 <!-- ════ FOOTER ════ -->
 <footer>
