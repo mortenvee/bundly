@@ -160,8 +160,10 @@
       /* Skalerer litt opp så vi unngår at blur-kantene viser */
       transform: scale(1.1);
       transform-origin: center;
-      will-change: filter, opacity;
-      transition: filter .1s linear, opacity .1s linear;
+      will-change: filter;
+      transition: filter .1s linear;
+      /* Start blurret — JS reduserer blur etter hvert som brukeren scroller */
+      filter: blur(14px);
     }
     /* Plassholder for fremtidig video — bytt .cinema-bg div ut med <video> ved behov */
     .cinema-overlay {
@@ -1532,13 +1534,13 @@
     if (y > 60) nav.classList.add('scrolled');
     else nav.classList.remove('scrolled');
 
-    // Hero blur + fade (basert på hvor langt vi er gjennom cinema-seksjonen)
+    // Hero starter blurret og blir skarpere når brukeren scroller
     if (cinema && cinemaBg) {
       const h = cinema.offsetHeight;
-      const progress = Math.min(1, Math.max(0, y / h));
-      // Maks 18px blur, 35 % nedtoning ved bunnen
-      cinemaBg.style.filter = `blur(${progress * 18}px)`;
-      cinemaBg.style.opacity = 1 - progress * 0.35;
+      // Nå skarpt etter ~50 % av seksjonen for en raskere "reveal"
+      const progress = Math.min(1, Math.max(0, (y / h) * 2));
+      const maxBlur = 14;
+      cinemaBg.style.filter = `blur(${maxBlur * (1 - progress)}px)`;
     }
     ticking = false;
   }
