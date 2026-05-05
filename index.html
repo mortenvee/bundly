@@ -1759,8 +1759,8 @@
       <div class="price-card">
         <div>
           <div class="price-name">Team</div>
-          <div class="price-amount" style="align-items:center;gap:8px">
-            <span style="font-size:1.6rem;font-weight:800;letter-spacing:-0.03em;color:var(--text)">Kontakt oss</span>
+          <div style="padding:10px 0 4px">
+            <span style="font-size:1.3rem;font-weight:700;letter-spacing:-0.02em;color:var(--text)">Kontakt oss</span>
           </div>
           <div class="price-yearly-note">skreddersydd for større team</div>
         </div>
@@ -1800,7 +1800,7 @@
   // Prisingstoggel (månedlig / årlig)
   const monthly = { enkel: 29, familie: 99 };
   const yearly  = { enkel: 23, familie: 79 };
-  let isYearly = false;
+  let isYearly = false; // default: månedlig
 
   function toggleBilling() {
     isYearly = !isYearly;
