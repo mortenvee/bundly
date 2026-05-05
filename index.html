@@ -1715,8 +1715,8 @@
         <div>
           <div class="price-name">Enkel</div>
           <div class="price-amount">
-            <span class="price-kr" id="enkel-price">299</span>
-            <span class="price-period">kr/mnd</span>
+            <span class="price-kr" id="enkel-price">29</span>
+            <span class="price-period" id="enkel-period">kr/mnd</span>
           </div>
           <div class="price-yearly-note" id="enkel-note">faktureres månedlig</div>
         </div>
@@ -1738,8 +1738,8 @@
         <div>
           <div class="price-name">Familie</div>
           <div class="price-amount">
-            <span class="price-kr" id="familie-price">999</span>
-            <span class="price-period">kr/mnd</span>
+            <span class="price-kr" id="familie-price">99</span>
+            <span class="price-period" id="familie-period">kr/mnd</span>
           </div>
           <div class="price-yearly-note" id="familie-note">faktureres månedlig</div>
         </div>
@@ -1798,17 +1798,19 @@
 
 <script>
   // Prisingstoggel (månedlig / årlig)
-  const monthly = { enkel: 299, familie: 999 };
-  const yearly  = { enkel: 239, familie: 799 };
+  const monthly = { enkel: 29,  familie: 99  };
+  const yearly  = { enkel: 299, familie: 999 };
   let isYearly = false; // default: månedlig
 
   function toggleBilling() {
     isYearly = !isYearly;
     document.getElementById('billingToggle').classList.toggle('yearly', isYearly);
     const prices = isYearly ? yearly : monthly;
-    const note = isYearly ? 'faktureres årlig' : 'faktureres månedlig';
+    const period = isYearly ? 'kr/år' : 'kr/mnd';
+    const note   = isYearly ? 'ett engangsbeløp per år' : 'faktureres månedlig';
     ['enkel','familie'].forEach(p => {
       document.getElementById(p + '-price').textContent = prices[p];
+      document.getElementById(p + '-period').textContent = period;
       document.getElementById(p + '-note').textContent = note;
     });
   }
