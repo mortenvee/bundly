@@ -7,54 +7,74 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (function() {
+      try {
+        var t = localStorage.getItem('bundly-theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch(e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #06080f;
       --surface: #0d1117;
       --border: #1e2a3a;
-      --accent: #6366f1;
+      --accent: #38b2ac;
       --text: #e8eaf0;
       --text-muted: #8892a4;
+    }
+    html[data-theme="light"] {
+      --bg: #fafaf7;
+      --surface: #ffffff;
+      --border: rgba(0,0,0,0.1);
+      --accent: #1e5b5e;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
     }
     body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* ── Lock screen ── */
     #lockScreen {
       position: fixed; inset: 0; z-index: 9999;
-      background: #06080f;
+      background: var(--bg);
       display: flex; align-items: center; justify-content: center;
     }
     .auth-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--surface);
+      border: 1px solid var(--border);
       border-radius: 24px; padding: 40px 44px;
       width: 100%; max-width: 380px;
       display: flex; flex-direction: column; align-items: center; gap: 16px;
-      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.12);
     }
     .auth-tabs {
-      display: flex; background: rgba(255,255,255,0.06);
+      display: flex; background: rgba(0,0,0,0.05);
       border-radius: 10px; padding: 3px; width: 100%; gap: 3px;
     }
+    html:not([data-theme="light"]) .auth-tabs { background: rgba(255,255,255,0.06); }
     .auth-tab {
       flex: 1; padding: 8px; border: none; border-radius: 7px;
       font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
       transition: all .15s;
     }
     .auth-tab.active { background: var(--accent); color: #fff; }
-    .auth-tab:not(.active) { background: transparent; color: #64748b; }
+    .auth-tab:not(.active) { background: transparent; color: var(--text-muted); }
     .auth-input {
-      width: 100%; background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
-      padding: 12px 16px; color: #f1f5f9; font-size: 1rem;
+      width: 100%; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; color: var(--text); font-size: 1rem;
       font-family: inherit; outline: none; transition: border-color .2s;
     }
+    html:not([data-theme="light"]) .auth-input { background: rgba(255,255,255,0.07); }
     .auth-input:focus { border-color: var(--accent); }
     .pw-wrap { width: 100%; position: relative; }
     .pw-toggle {
       position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer; font-size: 1rem; color: #64748b;
+      background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--text-muted);
     }
     .auth-btn {
       width: 100%; padding: 13px; background: var(--accent);
@@ -83,10 +103,10 @@
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: .05em; padding: 3px 10px; border-radius: 20px;
     }
-    .plan-starter { background: rgba(99,102,241,.12); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
+    .plan-starter { background: rgba(56,178,172,.12); color: #38b2ac; border: 1px solid rgba(56,178,172,.2); }
     .plan-familie { background: rgba(34,197,94,.1); color: #4ade80; border: 1px solid rgba(34,197,94,.2); }
     .plan-team    { background: rgba(245,158,11,.1); color: #fbbf24; border: 1px solid rgba(245,158,11,.2); }
-    .plan-gratis  { background: rgba(255,255,255,.06); color: #64748b; border: 1px solid rgba(255,255,255,.1); }
+    .plan-gratis  { background: rgba(0,0,0,.06); color: #64748b; border: 1px solid var(--border); }
     .sign-out-btn {
       background: none; border: 1px solid var(--border); color: var(--text-muted);
       border-radius: 8px; padding: 6px 14px; font-size: 13px; cursor: pointer;
@@ -117,7 +137,7 @@
     .planner-card:not(.locked):not(.coming-soon):hover {
       border-color: var(--accent);
       transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(99,102,241,.18);
+      box-shadow: 0 12px 40px rgba(30,91,94,.18);
     }
     .planner-card:active { transform: scale(.97); }
     .planner-card.locked {
@@ -128,18 +148,18 @@
 
     /* Velg-modus for Starter */
     .choose-banner {
-      background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.1));
-      border: 1px solid rgba(99,102,241,.3);
+      background: linear-gradient(135deg, rgba(56,178,172,.15), rgba(30,91,94,.1));
+      border: 1px solid rgba(56,178,172,.3);
       border-radius: 16px; padding: 20px 24px; margin-bottom: 32px;
       display: flex; align-items: center; gap: 14px;
     }
     .choose-banner-icon { font-size: 1.8rem; flex-shrink: 0; }
     .choose-banner h3 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
     .choose-banner p  { font-size: 13px; color: var(--text-muted); }
-    .planner-card.choosable { cursor: pointer; border-color: rgba(99,102,241,.3); }
+    .planner-card.choosable { cursor: pointer; border-color: rgba(56,178,172,.3); }
     .planner-card.choosable:hover {
       border-color: var(--accent); transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(99,102,241,.2);
+      box-shadow: 0 12px 40px rgba(30,91,94,.2);
     }
     .chosen-badge {
       position: absolute; top: 14px; right: 14px;
@@ -155,10 +175,10 @@
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: .05em; padding: 3px 10px; border-radius: 20px;
       width: fit-content;
-      background: rgba(99,102,241,.1); color: #818cf8;
-      border: 1px solid rgba(99,102,241,.2);
+      background: rgba(56,178,172,.12); color: #38b2ac;
+      border: 1px solid rgba(56,178,172,.2);
     }
-    .planner-tag.coming { background: rgba(255,255,255,.05); color: #475569; border-color: rgba(255,255,255,.08); }
+    .planner-tag.coming { background: rgba(0,0,0,.05); color: #64748b; border-color: var(--border); }
 
     .lock-overlay {
       position: absolute; inset: 0;
@@ -177,8 +197,8 @@
     /* ── Upgrade-banner (gratis-brukere) ── */
     .upgrade-banner {
       display: none;
-      background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(139,92,246,.08));
-      border: 1px solid rgba(99,102,241,.3);
+      background: linear-gradient(135deg, rgba(56,178,172,.12), rgba(30,91,94,.08));
+      border: 1px solid rgba(56,178,172,.3);
       border-radius: 20px; padding: 32px 36px; margin-bottom: 40px;
       text-align: center;
     }
@@ -192,8 +212,8 @@
       border-radius: 16px; padding: 24px 28px; min-width: 190px; text-align: left;
       cursor: pointer; transition: all .2s; flex: 1; max-width: 240px;
     }
-    .upgrade-plan-card:hover { border-color: var(--accent); background: rgba(99,102,241,.1); transform: translateY(-2px); }
-    .upgrade-plan-card.featured { border-color: var(--accent); background: rgba(99,102,241,.1); }
+    .upgrade-plan-card:hover { border-color: var(--accent); background: rgba(56,178,172,.08); transform: translateY(-2px); }
+    .upgrade-plan-card.featured { border-color: var(--accent); background: rgba(56,178,172,.08); }
     .upgrade-plan-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
     .upgrade-plan-price { font-size: 24px; font-weight: 800; color: var(--accent); margin-bottom: 4px; }
     .upgrade-plan-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
@@ -239,25 +259,82 @@
     /* ── Payment loading screen ── */
     #paymentScreen {
       display: none; position: fixed; inset: 0; z-index: 9000;
-      background: #06080f; align-items: center; justify-content: center;
+      background: var(--bg); align-items: center; justify-content: center;
       flex-direction: column; gap: 24px; text-align: center;
     }
     .pay-spinner {
       width: 52px; height: 52px; border-radius: 50%;
-      border: 3px solid rgba(99,102,241,.2);
-      border-top-color: #6366f1;
+      border: 3px solid rgba(56,178,172,.2);
+      border-top-color: #38b2ac;
       animation: spin 0.9s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .pay-title { font-size: 20px; font-weight: 800; color: #f1f5f9; }
-    .pay-sub   { font-size: 14px; color: #64748b; max-width: 280px; line-height: 1.6; }
+    .pay-title { font-size: 20px; font-weight: 800; color: var(--text); }
+    .pay-sub   { font-size: 14px; color: var(--text-muted); max-width: 280px; line-height: 1.6; }
     .pay-dots span {
       display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-      background: #6366f1; margin: 0 3px; animation: blink 1.2s infinite;
+      background: #38b2ac; margin: 0 3px; animation: blink 1.2s infinite;
     }
     .pay-dots span:nth-child(2) { animation-delay: .2s; }
     .pay-dots span:nth-child(3) { animation-delay: .4s; }
     @keyframes blink { 0%,80%,100% { opacity:.2; } 40% { opacity:1; } }
+
+    /* ── Theme toggle button ── */
+    .theme-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 5px 10px; cursor: pointer; font-size: 14px; color: var(--text-muted);
+      transition: all .15s; line-height: 1;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
+    .icon-sun { display: none; }
+    .icon-moon { display: inline; }
+    html[data-theme="light"] .icon-sun  { display: inline; }
+    html[data-theme="light"] .icon-moon { display: none; }
+
+    /* ── Light mode overrides ── */
+    html[data-theme="light"] header {
+      background: rgba(250,250,247,.92);
+    }
+    html[data-theme="light"] .plan-starter {
+      background: rgba(30,91,94,.1); color: #1e5b5e; border-color: rgba(30,91,94,.2);
+    }
+    html[data-theme="light"] .plan-gratis {
+      background: rgba(0,0,0,.06); color: #6b6b6b; border-color: rgba(0,0,0,.1);
+    }
+    html[data-theme="light"] .planner-tag {
+      background: rgba(30,91,94,.1); color: #1e5b5e; border-color: rgba(30,91,94,.2);
+    }
+    html[data-theme="light"] .planner-tag.coming {
+      background: rgba(0,0,0,.05); color: #6b6b6b; border-color: rgba(0,0,0,.1);
+    }
+    html[data-theme="light"] .choose-banner {
+      background: linear-gradient(135deg, rgba(30,91,94,.08), rgba(30,91,94,.04));
+      border-color: rgba(30,91,94,.2);
+    }
+    html[data-theme="light"] .planner-card.choosable {
+      border-color: rgba(30,91,94,.25);
+    }
+    html[data-theme="light"] .upgrade-banner {
+      background: linear-gradient(135deg, rgba(30,91,94,.08), rgba(30,91,94,.04));
+      border-color: rgba(30,91,94,.2);
+    }
+    html[data-theme="light"] .upgrade-plan-card {
+      background: #f5f7f7; border-color: rgba(0,0,0,.08);
+    }
+    html[data-theme="light"] .upgrade-plan-card:hover {
+      background: rgba(30,91,94,.06);
+    }
+    html[data-theme="light"] .upgrade-plan-card.featured {
+      background: rgba(30,91,94,.06); border-color: #1e5b5e;
+    }
+    html[data-theme="light"] .lock-overlay {
+      background: rgba(250,250,247,.8);
+    }
+    html[data-theme="light"] #paymentScreen {
+      background: var(--bg);
+    }
+    html[data-theme="light"] .pay-title { color: var(--text); }
+    html[data-theme="light"] .pay-sub   { color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -275,8 +352,8 @@
   <div class="auth-card">
     <div style="font-size:2rem;">✦</div>
     <div style="text-align:center;">
-      <div style="font-size:1.3rem;font-weight:800;color:#f1f5f9;margin-bottom:4px;">Bundly</div>
-      <div style="font-size:0.82rem;color:#64748b;" id="authSubtitle">Logg inn for å fortsette</div>
+      <div style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:4px;">Bundly</div>
+      <div style="font-size:0.82rem;color:var(--text-muted);" id="authSubtitle">Logg inn for å fortsette</div>
     </div>
 
     <div class="auth-tabs">
@@ -310,36 +387,36 @@
   <div class="plan-select-inner">
     <div style="text-align:center;margin-bottom:40px;">
       <div style="font-size:1.8rem;font-weight:800;margin-bottom:8px;">Velg din plan</div>
-      <p style="color:#64748b;">Kom i gang med 7 dagers gratis prøveperiode. Ingen binding.</p>
+      <p style="color:var(--text-muted);">Kom i gang med 7 dagers gratis prøveperiode. Ingen binding.</p>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:860px;width:100%;">
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Starter</div>
-        <div style="font-size:2rem;font-weight:800;color:#f1f5f9;">29 <span style="font-size:.9rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
-        <ul style="list-style:none;color:#94a3b8;font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);">Starter</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--text);">29 <span style="font-size:.9rem;font-weight:400;color:var(--text-muted);">kr/mnd</span></div>
+        <ul style="list-style:none;color:var(--text-muted);font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
           <li>✓ 1 planlegger etter valg</li><li>✓ Opptil 2 brukere</li><li>✓ 2 GB lagring</li>
         </ul>
-        <button onclick="choosePlan('starter','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+        <button onclick="choosePlan('starter','monthly')" style="margin-top:auto;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
       </div>
-      <div style="background:rgba(99,102,241,0.08);border:2px solid #6366f1;border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;position:relative;">
-        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6366f1;color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;">⭐ Mest populær</div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Familie</div>
-        <div style="font-size:2rem;font-weight:800;color:#f1f5f9;">99 <span style="font-size:.9rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
-        <ul style="list-style:none;color:#94a3b8;font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
+      <div style="background:var(--surface);border:2px solid var(--accent);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;position:relative;">
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 14px;border-radius:20px;">⭐ Mest populær</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);">Familie</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--text);">99 <span style="font-size:.9rem;font-weight:400;color:var(--text-muted);">kr/mnd</span></div>
+        <ul style="list-style:none;color:var(--text-muted);font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
           <li>✓ Alle planleggere</li><li>✓ Opptil 5 brukere</li><li>✓ 10 GB lagring</li><li>✓ PDF og Excel</li>
         </ul>
-        <button onclick="choosePlan('familie','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+        <button onclick="choosePlan('familie','monthly')" style="margin-top:auto;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
       </div>
-      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#818cf8;">Team</div>
-        <div style="font-size:2rem;font-weight:800;color:#f1f5f9;">299 <span style="font-size:.9rem;font-weight:400;color:#64748b;">kr/mnd</span></div>
-        <ul style="list-style:none;color:#94a3b8;font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);">Team</div>
+        <div style="font-size:2rem;font-weight:800;color:var(--text);">299 <span style="font-size:.9rem;font-weight:400;color:var(--text-muted);">kr/mnd</span></div>
+        <ul style="list-style:none;color:var(--text-muted);font-size:.88rem;display:flex;flex-direction:column;gap:8px;">
           <li>✓ Alt i Familie</li><li>✓ Opptil 20 brukere</li><li>✓ 50 GB lagring</li><li>✓ Admin-panel</li>
         </ul>
-        <button onclick="choosePlan('team','monthly')" style="margin-top:auto;padding:12px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
+        <button onclick="choosePlan('team','monthly')" style="margin-top:auto;padding:12px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:inherit;">Prøv gratis i 7 dager</button>
       </div>
     </div>
-    <button onclick="doSignOut()" style="margin-top:32px;background:none;border:none;color:#475569;font-size:.85rem;cursor:pointer;font-family:inherit;">← Logg ut</button>
+    <button onclick="doSignOut()" style="margin-top:32px;background:none;border:none;color:var(--text-muted);font-size:.85rem;cursor:pointer;font-family:inherit;">← Logg ut</button>
   </div>
 </div>
 
@@ -350,6 +427,9 @@
     <div class="header-right">
       <span class="user-email" id="userEmailEl"></span>
       <span class="plan-badge" id="planBadgeEl"></span>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Bytt tema" aria-label="Bytt tema">
+        <span class="icon-sun">☀</span><span class="icon-moon">☾</span>
+      </button>
       <button class="sign-out-btn" onclick="doSignOut()">Logg ut</button>
     </div>
   </header>
@@ -393,6 +473,13 @@
 </div>
 
 <script>
+function toggleTheme() {
+  const cur  = document.documentElement.getAttribute('data-theme') || 'light';
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('bundly-theme', next); } catch(e) {}
+}
+
 const SUPABASE_URL = 'https://vvxufkrfeaamycpkzmdr.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2eHVma3JmZWFhbXljcGt6bWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MDM3NjYsImV4cCI6MjA5MTQ3OTc2Nn0.fqyh1ml4Pi4el6RcEgPmovgIUXVcesXPk3TGL6XyUUI';
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -650,13 +737,13 @@ function showApp(user, sub) {
 
   if (currentPlan === 'trial') {
     const daysLeft = sub?.daysLeft ?? 7;
-    const urgency  = daysLeft <= 2 ? '#ef4444' : daysLeft <= 4 ? '#f59e0b' : '#6366f1';
+    const urgency  = daysLeft <= 2 ? '#ef4444' : daysLeft <= 4 ? '#f59e0b' : '#38b2ac';
     document.getElementById('pageSubEl').innerHTML =
       `<span style="background:${urgency};color:#fff;padding:3px 10px;border-radius:20px;font-size:0.78rem;font-weight:600">
         ⏰ ${daysLeft} dag${daysLeft !== 1 ? 'er' : ''} igjen av prøveperioden
       </span>
       <a href="#" onclick="document.getElementById('upgradeBanner').scrollIntoView({behavior:'smooth'});return false"
-         style="margin-left:10px;font-size:0.8rem;color:#6366f1;text-decoration:underline">Velg plan</a>`;
+         style="margin-left:10px;font-size:0.8rem;color:var(--accent);text-decoration:underline">Velg plan</a>`;
     banner.style.display = 'block';
   } else if (currentPlan === 'gratis') {
     document.getElementById('pageSubEl').textContent = 'Velg et abonnement nedenfor for å låse opp planleggerne.';

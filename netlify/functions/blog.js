@@ -23,12 +23,6 @@ exports.handler = async (event) => {
     body: JSON.stringify(body),
   });
 
-  // ── Auth
-  const secret = event.headers['x-admin-secret'];
-  if (!secret || secret !== process.env.ADMIN_SECRET) {
-    return json(401, { error: 'Unauthorized' });
-  }
-
   // ── Supabase config
   const BASE = `${process.env.SUPABASE_URL}/rest/v1/blog_posts`;
   const SB   = {
@@ -38,13 +32,22 @@ exports.handler = async (event) => {
     'Prefer':        'return=representation',
   };
 
+  const secret = event.headers['x-admin-secret'];
+  const isAdmin = secret && secret === process.env.ADMIN_SECRET;
+
   try {
-    // ── GET – list all posts (admin sees drafts too)
+    // ── GET – public: only published posts; admin: all posts
     if (event.httpMethod === 'GET') {
-      const res  = await fetch(`${BASE}?select=*&order=date.desc,created_at.desc`, { headers: SB });
+      const filter = isAdmin
+        ? `select=*&order=date.desc,created_at.desc`
+        : `select=*&published=eq.true&order=date.desc,created_at.desc`;
+      const res  = await fetch(`${BASE}?${filter}`, { headers: SB });
       const data = await res.json();
       return json(res.ok ? 200 : res.status, data);
     }
+
+    // ── Write operations require admin secret
+    if (!isAdmin) return json(401, { error: 'Unauthorized' });
 
     // ── POST – create new post
     if (event.httpMethod === 'POST') {

@@ -164,24 +164,33 @@
   <div class="container">
 
     <!-- Featured -->
-    <div class="featured-post">
-      <a href="#">
-        <div class="featured-art">🏠</div>
+    <div class="featured-post" id="featuredPost" style="display:none">
+      <a id="featuredLink" href="#">
+        <div class="featured-art" id="featuredArt">🏠</div>
         <div class="featured-body">
-          <span class="post-tag">Oppussing</span>
-          <h2>Slik planlegger du baderomsrenovering uten å miste oversikten</h2>
-          <p>Alt fra budsjettering og materiallister til håndverkere og tidsplan — vi går gjennom hele prosessen steg for steg.</p>
+          <span class="post-tag" id="featuredTag"></span>
+          <h2 id="featuredTitle"></h2>
+          <p id="featuredExcerpt"></p>
           <div class="post-meta">
-            <span>📅 28. april 2025</span>
-            <span>⏱ 7 min lesing</span>
+            <span id="featuredDate"></span>
+            <span id="featuredReadtime"></span>
           </div>
           <span class="read-more">Les artikkelen →</span>
         </div>
       </a>
     </div>
 
+    <!-- Loading state -->
+    <div id="blogLoading" style="text-align:center;padding:60px 0;color:var(--muted)">Laster innlegg…</div>
+
+    <!-- Empty state -->
+    <div id="blogEmpty" style="display:none;text-align:center;padding:60px 0;color:var(--muted-2)">
+      <div style="font-size:2.5rem;margin-bottom:16px">✍️</div>
+      <p>Ingen innlegg publisert ennå. Kom tilbake snart!</p>
+    </div>
+
     <!-- Post grid -->
-    <div class="posts-grid">
+    <div class="posts-grid" id="postsGrid">
 
       <div class="post-card">
         <div class="post-art art-1">💰</div>
@@ -196,66 +205,6 @@
         </div>
       </div>
 
-      <div class="post-card">
-        <div class="post-art art-2">📋</div>
-        <div class="post-body">
-          <span class="post-tag">Sjekkliste</span>
-          <h3>Den komplette sjekklisten for kjøp av bruktbolig</h3>
-          <p>22 punkter du bør ha kontroll på før du signerer kontrakten — lastes ned som PDF.</p>
-          <div class="post-footer">
-            <span class="post-date">14. april 2025</span>
-            <span class="read-more" style="font-size:0.78rem">Les →</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="post-card">
-        <div class="post-art art-3">👷</div>
-        <div class="post-body">
-          <span class="post-tag">Håndverkere</span>
-          <h3>Slik finner og følger du opp håndverkere</h3>
-          <p>Hva du bør spørre om i første møte, og hvordan du dokumenterer arbeidet underveis.</p>
-          <div class="post-footer">
-            <span class="post-date">7. april 2025</span>
-            <span class="read-more" style="font-size:0.78rem">Les →</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Coming soon cards -->
-      <div class="post-card soon">
-        <div class="post-art art-4">💒</div>
-        <div class="post-body">
-          <span class="post-tag">Bryllup</span>
-          <h3>12-månedersplan for bryllupsplanlegging</h3>
-          <p>Fra lokale og catering til invitasjoner og takkekort — en realistisk tidslinje.</p>
-          <div class="post-footer"><span class="post-date">Snart</span></div>
-        </div>
-        <div class="soon-overlay"><span class="soon-pill">Kommer snart</span></div>
-      </div>
-
-      <div class="post-card soon">
-        <div class="post-art art-5">📦</div>
-        <div class="post-body">
-          <span class="post-tag">Flytting</span>
-          <h3>Den ultimate pakkelisten for flytting</h3>
-          <p>Vi har samlet alt du trenger å huske — sortert rom for rom og prioritert etter dato.</p>
-          <div class="post-footer"><span class="post-date">Snart</span></div>
-        </div>
-        <div class="soon-overlay"><span class="soon-pill">Kommer snart</span></div>
-      </div>
-
-      <div class="post-card soon">
-        <div class="post-art art-6">🏔</div>
-        <div class="post-body">
-          <span class="post-tag">Hytte</span>
-          <h3>Hva koster det egentlig å bygge hytte i 2025?</h3>
-          <p>Vi går gjennom de vanligste postene og hva som oftest overraske folk i ettertid.</p>
-          <div class="post-footer"><span class="post-date">Snart</span></div>
-        </div>
-        <div class="soon-overlay"><span class="soon-pill">Kommer snart</span></div>
-      </div>
-
     </div>
   </div>
 </section>
@@ -266,6 +215,74 @@
     <p>Laget i Norge — for livets store prosjekter.</p>
   </div>
 </footer>
+
+<script>
+  const ART_EMOJIS = ['🏠','💰','📋','👷','💒','📦','🏔','🌴','🔨','📐'];
+  const ART_CLASSES = ['art-1','art-2','art-3','art-4','art-5','art-6'];
+
+  function formatDate(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return d.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function loadBlog() {
+    try {
+      const res = await fetch('/.netlify/functions/blog');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const posts = await res.json();
+
+      document.getElementById('blogLoading').style.display = 'none';
+
+      if (!posts.length) {
+        document.getElementById('blogEmpty').style.display = 'block';
+        return;
+      }
+
+      // Featured = first post
+      const featured = posts[0];
+      const fp = document.getElementById('featuredPost');
+      document.getElementById('featuredArt').textContent   = featured.emoji || '🏠';
+      document.getElementById('featuredTag').textContent   = featured.tag || 'Blogg';
+      document.getElementById('featuredTitle').textContent = featured.title || '';
+      document.getElementById('featuredExcerpt').textContent = featured.excerpt || '';
+      document.getElementById('featuredDate').textContent  = featured.date ? '📅 ' + formatDate(featured.date) : '';
+      document.getElementById('featuredReadtime').textContent = featured.readtime ? '⏱ ' + featured.readtime : '';
+      document.getElementById('featuredLink').href         = featured.url || '#';
+      fp.style.display = 'block';
+
+      // Rest = grid
+      const grid = document.getElementById('postsGrid');
+      const rest = posts.slice(1);
+      if (!rest.length) return;
+
+      grid.innerHTML = rest.map((p, i) => `
+        <a href="${esc(p.url || '#')}" class="post-card" style="text-decoration:none">
+          <div class="post-art ${ART_CLASSES[i % ART_CLASSES.length]}">${esc(p.emoji || ART_EMOJIS[i % ART_EMOJIS.length])}</div>
+          <div class="post-body">
+            <span class="post-tag">${esc(p.tag || 'Blogg')}</span>
+            <h3>${esc(p.title)}</h3>
+            <p>${esc(p.excerpt || '')}</p>
+            <div class="post-footer">
+              <span class="post-date">${p.date ? formatDate(p.date) : ''}</span>
+              <span class="read-more" style="font-size:0.78rem">Les →</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
+
+    } catch (err) {
+      document.getElementById('blogLoading').textContent = 'Kunne ikke laste innlegg. Prøv igjen senere.';
+      console.error('Blog load error:', err);
+    }
+  }
+
+  loadBlog();
+</script>
 
 </body>
 </html>
