@@ -115,30 +115,36 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         from:    'Bundly <hei@bundly.no>',
         to:      email,
-        subject: `${ownerName} har invitert deg til Bundly 🏠`,
+        subject: `${ownerName} har invitert deg til Bundly ✦`,
         html: `
-          <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;background:#0d1117;border-radius:12px;overflow:hidden;border:1px solid #1e2530">
-            <div style="background:#06080f;padding:32px;text-align:center;border-bottom:1px solid #1e2530">
-              <div style="font-size:2.2rem;margin-bottom:8px">🏠</div>
-              <h1 style="color:#fff;margin:0 0 6px;font-size:1.4rem;font-weight:700">Du er invitert til Bundly!</h1>
-              <p style="color:#6366f1;margin:0;font-size:0.88rem;font-weight:500">Din smarte planlegger for boligprosjekter</p>
+          <div style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:0 auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #e8e4d8">
+            <div style="background:#1e5b5e;padding:36px 32px;text-align:center">
+              <div style="font-size:1.6rem;margin-bottom:10px;color:#fff">✦</div>
+              <h1 style="color:#fff;margin:0 0 6px;font-size:1.3rem;font-weight:800;letter-spacing:-0.02em">Du er invitert til Bundly!</h1>
+              <p style="color:rgba(255,255,255,0.75);margin:0;font-size:0.85rem">For livets store prosjekter</p>
             </div>
             <div style="padding:32px">
-              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7;margin-top:0">
-                Hei! <strong style="color:#fff">${userData.email}</strong> har invitert deg til sitt team på Bundly.<br>
+              <p style="color:#374151;font-size:0.95rem;line-height:1.7;margin-top:0">
+                Hei! <strong style="color:#1a1a1a">${userData.email}</strong> har invitert deg til sitt team på Bundly.
                 Du får tilgang til deres prosjekter — ingen betaling nødvendig.
               </p>
-              <p style="color:#cbd5e1;font-size:0.95rem;line-height:1.7">Bruk invitasjonskoden nedenfor for å opprette kontoen din:</p>
+              <p style="color:#374151;font-size:0.95rem;line-height:1.7">Bruk invitasjonskoden nedenfor for å opprette kontoen din:</p>
               <div style="text-align:center;margin:32px 0">
-                <div style="background:#1e2530;border:2px dashed #6366f1;border-radius:12px;padding:24px;display:inline-block">
-                  <div style="color:#94a3b8;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Din invitasjonskode</div>
-                  <div style="color:#fff;font-size:2.2rem;font-weight:800;letter-spacing:.3em;font-variant-numeric:tabular-nums">${inviteCode}</div>
+                <div style="background:#f5f2e8;border:2px dashed #1e5b5e;border-radius:12px;padding:24px;display:inline-block">
+                  <div style="color:#6b6b6b;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px">Din invitasjonskode</div>
+                  <div style="color:#1e5b5e;font-size:2.2rem;font-weight:800;letter-spacing:.3em;font-variant-numeric:tabular-nums">${inviteCode}</div>
                 </div>
               </div>
-              <p style="color:#cbd5e1;font-size:0.9rem;line-height:1.7;text-align:center">
-                Gå til <a href="https://bundly.no/app/" style="color:#6366f1">bundly.no/app</a> og velg <strong style="color:#fff">«Invitasjonskode»</strong> for å aktivere kontoen.
+              <p style="color:#374151;font-size:0.9rem;line-height:1.7;text-align:center">
+                Gå til <a href="https://bundly.no/app/" style="color:#1e5b5e;font-weight:600">bundly.no/app</a> og velg <strong>«Invitasjonskode»</strong> for å aktivere kontoen.
               </p>
-              <p style="color:#475569;font-size:0.8rem;text-align:center;margin-top:24px;margin-bottom:0">Koden utløper ikke — ta den i bruk når det passer deg.</p>
+              <p style="color:#9a9a96;font-size:0.8rem;text-align:center;margin-top:20px;margin-bottom:0">Koden utløper ikke — ta den i bruk når det passer deg.</p>
+            </div>
+            <div style="padding:20px 32px 28px;text-align:center;border-top:1px solid #f0ece4">
+              <p style="color:#9a9a96;font-size:0.78rem;margin:0">
+                ✦ Bundly · For livets store prosjekter<br>
+                <a href="https://bundly.no" style="color:#9a9a96;text-decoration:none">bundly.no</a>
+              </p>
             </div>
           </div>`,
       }),
